@@ -19,6 +19,7 @@ public sealed class FpsPlayerMotor : MonoBehaviour
     [SerializeField] private float bobReturnSpeed = 14f;
 
     private Transform cameraTransform;
+    private Transform playerYawRoot;
     private CharacterController characterController;
     private float pitch;
     private float bobTimer;
@@ -60,8 +61,7 @@ public sealed class FpsPlayerMotor : MonoBehaviour
             characterController = GetComponent<CharacterController>();
         }
 
-        pitch = NormalizePitch(cameraTransform.localEulerAngles.x);
-        SnapToEyeLevel();
+        BuildYawRootFromCurrentCameraPose();
     }
 
     private void Update()
@@ -81,7 +81,7 @@ public sealed class FpsPlayerMotor : MonoBehaviour
     {
         Vector2 lookDelta = Mouse.current == null ? Vector2.zero : Mouse.current.delta.ReadValue();
 
-        transform.Rotate(Vector3.up, lookDelta.x * mouseSensitivity, Space.Self);
+        playerYawRoot.Rotate(Vector3.up, lookDelta.x * mouseSensitivity, Space.Self);
 
         pitch = Mathf.Clamp(pitch - lookDelta.y * mouseSensitivity, minPitch, maxPitch);
         cameraTransform.localRotation = Quaternion.Euler(pitch, 0f, 0f);
@@ -90,25 +90,27 @@ public sealed class FpsPlayerMotor : MonoBehaviour
     private void HandleMove()
     {
         Vector2 moveInput = ReadMoveInput();
-        Vector3 forward = Vector3.ProjectOnPlane(cameraTransform.forward, Vector3.up).normalized;
-        Vector3 right = Vector3.ProjectOnPlane(cameraTransform.right, Vector3.up).normalized;
+        Vector3 forward = Vector3.ProjectOnPlane(playerYawRoot.forward, Vector3.up).normalized;
+        Vector3 right = Vector3.ProjectOnPlane(playerYawRoot.right, Vector3.up).normalized;
         Vector3 move = forward * moveInput.y + right * moveInput.x;
         move = Vector3.ClampMagnitude(move, 1f);
 
-        Vector3 nextPosition = transform.position + move * walkSpeed * Time.deltaTime;
+        Vector3 nextPosition = playerYawRoot.position + move * walkSpeed * Time.deltaTime;
         float targetEyeY = GetTerrainHeight(nextPosition) + eyeLevel;
         UpdateWalkBob(moveInput.sqrMagnitude > 0.01f);
-        nextPosition.y = targetEyeY - currentBobDrop;
+        nextPosition.y = targetEyeY - eyeLevel;
 
         if (characterController != null)
         {
             characterController.enabled = false;
-            transform.position = nextPosition;
+            playerYawRoot.position = nextPosition;
             characterController.enabled = true;
+            cameraTransform.localPosition = new Vector3(0f, eyeLevel - currentBobDrop, 0f);
             return;
         }
 
-        transform.position = nextPosition;
+        playerYawRoot.position = nextPosition;
+        cameraTransform.localPosition = new Vector3(0f, eyeLevel - currentBobDrop, 0f);
     }
 
     private static Vector2 ReadMoveInput()
@@ -182,6 +184,25 @@ public sealed class FpsPlayerMotor : MonoBehaviour
         Vector3 position = transform.position;
         position.y = GetTerrainHeight(position) + eyeLevel;
         transform.position = position;
+    }
+
+    private void BuildYawRootFromCurrentCameraPose()
+    {
+        Vector3 initialCameraPosition = cameraTransform.position;
+        Vector3 rootPosition = initialCameraPosition;
+        rootPosition.y = GetTerrainHeight(initialCameraPosition);
+
+        Quaternion initialCameraRotation = cameraTransform.rotation;
+        float initialYaw = initialCameraRotation.eulerAngles.y;
+        pitch = Mathf.Clamp(NormalizePitch(initialCameraRotation.eulerAngles.x), minPitch, maxPitch);
+
+        GameObject root = new GameObject("FPS Player Yaw Root");
+        playerYawRoot = root.transform;
+        playerYawRoot.SetPositionAndRotation(rootPosition, Quaternion.Euler(0f, initialYaw, 0f));
+
+        cameraTransform.SetParent(playerYawRoot, false);
+        cameraTransform.localPosition = new Vector3(0f, eyeLevel, 0f);
+        cameraTransform.localRotation = Quaternion.Euler(pitch, 0f, 0f);
     }
 
     private float GetTerrainHeight(Vector3 position)

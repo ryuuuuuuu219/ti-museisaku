@@ -23,19 +23,24 @@ Shader "Horror/GrasslandGround"
             HLSLPROGRAM
             #pragma vertex vert
             #pragma fragment frag
+            #pragma multi_compile _ _ADDITIONAL_LIGHTS
 
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
 
             struct Attributes
             {
                 float4 positionOS : POSITION;
+                float3 normalOS : NORMAL;
                 float2 uv : TEXCOORD0;
             };
 
             struct Varyings
             {
                 float4 positionHCS : SV_POSITION;
-                float2 uv : TEXCOORD0;
+                float3 positionWS : TEXCOORD0;
+                float3 normalWS : TEXCOORD1;
+                float2 uv : TEXCOORD2;
             };
 
             CBUFFER_START(UnityPerMaterial)
@@ -54,7 +59,11 @@ Shader "Horror/GrasslandGround"
             Varyings vert(Attributes input)
             {
                 Varyings output;
-                output.positionHCS = TransformObjectToHClip(input.positionOS.xyz);
+                VertexPositionInputs positionInputs = GetVertexPositionInputs(input.positionOS.xyz);
+                VertexNormalInputs normalInputs = GetVertexNormalInputs(input.normalOS);
+                output.positionHCS = positionInputs.positionCS;
+                output.positionWS = positionInputs.positionWS;
+                output.normalWS = NormalizeNormalPerVertex(normalInputs.normalWS);
                 output.uv = input.uv;
                 return output;
             }
@@ -64,7 +73,26 @@ Shader "Horror/GrasslandGround"
                 float patch = Hash21(floor(input.uv * _NoiseScale));
                 float fine = Hash21(floor(input.uv * _NoiseScale * 4.0));
                 float mixValue = saturate(patch * 0.55 + fine * 0.25);
-                return half4(lerp(_NoiseColor.rgb, _BaseColor.rgb, mixValue), 1);
+                float3 albedo = lerp(_NoiseColor.rgb, _BaseColor.rgb, mixValue);
+                float3 normalWS = normalize(input.normalWS);
+
+                Light mainLight = GetMainLight();
+                float mainNdotL = saturate(dot(normalWS, mainLight.direction));
+                float3 lighting = mainLight.color * mainNdotL;
+
+                #if defined(_ADDITIONAL_LIGHTS)
+                uint additionalLightCount = GetAdditionalLightsCount();
+                for (uint lightIndex = 0u; lightIndex < additionalLightCount; lightIndex++)
+                {
+                    Light light = GetAdditionalLight(lightIndex, input.positionWS);
+                    float ndotl = saturate(dot(normalWS, light.direction));
+                    lighting += light.color * ndotl * light.distanceAttenuation * light.shadowAttenuation;
+                }
+                #endif
+
+                float3 ambient = albedo * 0.035;
+                float3 litColor = ambient + albedo * lighting;
+                return half4(litColor, 1);
             }
             ENDHLSL
         }
