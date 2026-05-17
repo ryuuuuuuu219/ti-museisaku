@@ -49,6 +49,10 @@ public sealed class HorrorFpsMvpController : MonoBehaviour
 
     private void BuildPlayerRig()
     {
+        Camera playerCamera = GetComponent<Camera>();
+        playerCamera.clearFlags = CameraClearFlags.SolidColor;
+        playerCamera.backgroundColor = Color.black;
+
         playerRoot = new GameObject("Horror FPS Player").transform;
         playerRoot.position = new Vector3(0f, 1f, -5f);
         playerRoot.rotation = Quaternion.identity;
@@ -76,9 +80,9 @@ public sealed class HorrorFpsMvpController : MonoBehaviour
 
     private void BuildMvpSceneIfNeeded()
     {
-        foreach (Light sceneLight in FindObjectsByType<Light>(FindObjectsSortMode.None))
+        foreach (Light sceneLight in FindObjectsByType<Light>(FindObjectsInactive.Exclude))
         {
-            if (sceneLight.type == LightType.Directional)
+            if (sceneLight != carriedLight)
             {
                 Destroy(sceneLight.gameObject);
             }
@@ -90,9 +94,10 @@ public sealed class HorrorFpsMvpController : MonoBehaviour
         }
 
         RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
-        RenderSettings.ambientLight = new Color(0.01f, 0.012f, 0.016f);
+        RenderSettings.ambientLight = Color.black;
+        RenderSettings.skybox = null;
         RenderSettings.fog = true;
-        RenderSettings.fogColor = new Color(0.012f, 0.014f, 0.018f);
+        RenderSettings.fogColor = Color.black;
         RenderSettings.fogDensity = 0.045f;
 
         CreatePrimitive("MVP Floor", PrimitiveType.Cube, new Vector3(0f, -0.05f, 0f), new Vector3(18f, 0.1f, 24f), new Color(0.12f, 0.12f, 0.115f));
