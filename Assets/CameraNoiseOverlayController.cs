@@ -4,19 +4,19 @@ using UnityEngine;
 public sealed class CameraNoiseOverlayController : MonoBehaviour
 {
     [Header("Base Noise")]
-    [SerializeField, Range(0f, 1f)] private float noiseLevel = 0.2f;
+    [SerializeField, Range(0f, 1f)] private float noiseLevel = 0.065f;
     [SerializeField] private float noisePlaneDistance = 0.35f;
     [SerializeField] private float noiseScale = 160f;
     [SerializeField] private float noiseFlickerSpeed = 22f;
 
     [Header("Block Noise")]
-    [SerializeField, Range(0f, 1f)] private float blockNoiseLevel = 0.25f;
+    [SerializeField, Range(0f, 1f)] private float blockNoiseLevel = 0.055f;
     [SerializeField] private Vector2 blockNoiseRegionSize = new Vector2(0.24f, 0.12f);
     [SerializeField] private Vector2 blockNoiseGrid = new Vector2(8f, 5f);
     [SerializeField] private float blockNoiseInterval = 0.12f;
 
     [Header("RGB Glitch")]
-    [SerializeField, Range(0f, 1f)] private float rgbGlitchLevel = 0.18f;
+    [SerializeField, Range(0f, 1f)] private float rgbGlitchLevel = 0.018f;
     [SerializeField] private float rgbGlitchOffset = 0.012f;
 
     private Camera targetCamera;
