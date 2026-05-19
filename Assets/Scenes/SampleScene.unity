@@ -37,7 +37,7 @@ RenderSettings:
   m_ReflectionBounces: 1
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
-  m_Sun: {fileID: 0}
+  m_Sun: {fileID: 1484689601}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -129,6 +129,7 @@ GameObject:
   m_Component:
   - component: {fileID: 138371919}
   - component: {fileID: 138371918}
+  - component: {fileID: 138371920}
   m_Layer: 0
   m_Name: Infomanager
   m_TagString: Untagged
@@ -151,7 +152,7 @@ MonoBehaviour:
   infoCanvasA: {fileID: 314495748}
   infoCanvasB: {fileID: 1572611476}
   infoLightA: {fileID: 2100679995}
-  debugSanity: 10
+  debugSanity: 88.7
   hallucinationSanityThreshold: 4
   currentState: 0
 --- !u!4 &138371919
@@ -169,6 +170,26 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &138371920
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 138371917}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62ef2c1ed23c4e65a4c4a43f52ec59bc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Phase1EnvironmentController
+  moonLight: {fileID: 1484689601}
+  moonIntensity: 0.6
+  initialSkyFillAmount: 0
+  transitionSeconds: 2.5
+  moonPosition: {x: 0, y: 120, z: 140}
+  transitionExpansionRate: 1.6
+  skyRadius: 900
+  skyGridRadius: 28
 --- !u!1 &255690738
 GameObject:
   m_ObjectHideFlags: 0
@@ -1134,7 +1155,7 @@ Light:
   serializedVersion: 13
   m_Type: 1
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_Intensity: 0.19
+  m_Intensity: 0.6
   m_Range: 10
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
