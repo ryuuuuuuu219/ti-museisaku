@@ -9,6 +9,7 @@ Shader "Horror/CameraNoiseOverlay"
         _BlockNoiseCenter ("Block Noise Center", Vector) = (0.5, 0.5, 0, 0)
         _BlockNoiseRegionSize ("Block Noise Region Size", Vector) = (0.24, 0.12, 0, 0)
         _BlockNoiseGrid ("Block Noise Grid", Vector) = (8, 5, 0, 0)
+        _BlackNoiseCount ("Black Noise Count", Range(0, 16)) = 0
         _RgbGlitchLevel ("RGB Glitch Level", Range(0, 1)) = 0.18
         _RgbGlitchOffset ("RGB Glitch Offset", Float) = 0.012
     }
@@ -58,6 +59,7 @@ Shader "Horror/CameraNoiseOverlay"
                 float2 _BlockNoiseCenter;
                 float2 _BlockNoiseRegionSize;
                 float2 _BlockNoiseGrid;
+                float _BlackNoiseCount;
                 float _RgbGlitchLevel;
                 float _RgbGlitchOffset;
             CBUFFER_END
@@ -90,7 +92,8 @@ Shader "Horror/CameraNoiseOverlay"
                 float2 blockCell = floor(saturate(regionUv) * max(_BlockNoiseGrid, 1.0));
                 float blockRandom = Hash21(blockCell + frameSeed * 3.71);
                 float blockStripe = step(0.38, Hash21(float2(blockCell.y, frameSeed)));
-                float blockNoise = blockMask * step(0.42, blockRandom) * lerp(0.35, 1.0, blockRandom) * blockStripe;
+                float blackNoiseDensity = saturate(_BlackNoiseCount / 16.0);
+                float blockNoise = blockMask * step(1.0 - blackNoiseDensity, blockRandom) * lerp(0.35, 1.0, blockRandom) * blockStripe;
 
                 float rgbWave = Hash21(floor(float2(input.uv.y * 28.0, frameSeed))) * 2.0 - 1.0;
                 float rgbShift = rgbWave * _RgbGlitchOffset;

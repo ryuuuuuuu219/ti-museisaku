@@ -19,15 +19,30 @@ public sealed class CameraNoiseOverlayController : MonoBehaviour
     [SerializeField, Range(0f, 1f)] private float rgbGlitchLevel = 0.018f;
     [SerializeField] private float rgbGlitchOffset = 0.012f;
 
+    [Header("Sanity Response")]
+    [SerializeField] private float zeroSanityNoiseLevel = 0.387f;
+    [SerializeField] private float zeroSanityBlockNoiseLevel = 0.188f;
+    [SerializeField] private float zeroSanityRgbGlitchLevel = 0.136f;
+    [SerializeField] private float thirtySanityMultiplier = 1.4f;
+    [SerializeField] private float zeroSanityBlackNoiseCount = 16f;
+
     private Camera targetCamera;
     private Material noiseMaterial;
     private Transform noisePlane;
+    private Info info;
     private float nextBlockJumpTime;
     private Vector2 blockNoiseCenter = new Vector2(0.5f, 0.5f);
+    private float initialNoiseLevel;
+    private float initialBlockNoiseLevel;
+    private float initialRgbGlitchLevel;
 
     private void Awake()
     {
         targetCamera = GetComponent<Camera>();
+        info = FindAnyObjectByType<Info>();
+        initialNoiseLevel = noiseLevel;
+        initialBlockNoiseLevel = blockNoiseLevel;
+        initialRgbGlitchLevel = rgbGlitchLevel;
         BuildNoisePlane();
         JumpBlockRegion();
     }
@@ -94,14 +109,41 @@ public sealed class CameraNoiseOverlayController : MonoBehaviour
         noisePlane.localRotation = Quaternion.identity;
         noisePlane.localScale = new Vector3(width, height, 1f);
 
-        noiseMaterial.SetFloat("_NoiseLevel", noiseLevel);
+        float sanity = GetSanity();
+        float drivenNoiseLevel = EvaluateSanityQuadratic(sanity, initialNoiseLevel, zeroSanityNoiseLevel);
+        float drivenBlockNoiseLevel = EvaluateSanityQuadratic(sanity, initialBlockNoiseLevel, zeroSanityBlockNoiseLevel);
+        float drivenRgbGlitchLevel = EvaluateSanityQuadratic(sanity, initialRgbGlitchLevel, zeroSanityRgbGlitchLevel);
+        float blackNoiseCount = Mathf.Lerp(zeroSanityBlackNoiseCount, 0f, Mathf.Clamp01(sanity / 100f));
+
+        noiseMaterial.SetFloat("_NoiseLevel", drivenNoiseLevel);
         noiseMaterial.SetFloat("_NoiseScale", noiseScale);
         noiseMaterial.SetFloat("_FlickerSpeed", noiseFlickerSpeed);
-        noiseMaterial.SetFloat("_BlockNoiseLevel", blockNoiseLevel);
+        noiseMaterial.SetFloat("_BlockNoiseLevel", drivenBlockNoiseLevel);
         noiseMaterial.SetVector("_BlockNoiseCenter", blockNoiseCenter);
         noiseMaterial.SetVector("_BlockNoiseRegionSize", blockNoiseRegionSize);
         noiseMaterial.SetVector("_BlockNoiseGrid", blockNoiseGrid);
-        noiseMaterial.SetFloat("_RgbGlitchLevel", rgbGlitchLevel);
+        noiseMaterial.SetFloat("_BlackNoiseCount", blackNoiseCount);
+        noiseMaterial.SetFloat("_RgbGlitchLevel", drivenRgbGlitchLevel);
         noiseMaterial.SetFloat("_RgbGlitchOffset", rgbGlitchOffset);
+    }
+
+    private float GetSanity()
+    {
+        if (info == null)
+        {
+            info = FindAnyObjectByType<Info>();
+        }
+
+        return info != null ? Mathf.Clamp(info.GetSanity(), 0f, 100f) : 100f;
+    }
+
+    private float EvaluateSanityQuadratic(float sanity, float initialValue, float zeroSanityValue)
+    {
+        float thirtySanityValue = initialValue * thirtySanityMultiplier;
+        float valueAtZero = zeroSanityValue * ((sanity - 30f) * (sanity - 100f)) / 3000f;
+        float valueAtThirty = thirtySanityValue * (sanity * (sanity - 100f)) / -2100f;
+        float valueAtHundred = initialValue * (sanity * (sanity - 30f)) / 7000f;
+
+        return Mathf.Clamp01(valueAtZero + valueAtThirty + valueAtHundred);
     }
 }

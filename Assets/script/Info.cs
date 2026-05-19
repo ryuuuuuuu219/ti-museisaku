@@ -7,7 +7,8 @@ public class Info : MonoBehaviour
     [SerializeField] Canvas infoCanvasA;
     [SerializeField] Canvas infoCanvasB;
     [SerializeField] Light infoLightA;
-    [SerializeField] float debugSanity = 10f;
+    [SerializeField] [Range(0f, 100f)] float debugSanity = 10f;
+    [SerializeField] float hallucinationSanityThreshold = 4f;
 
     public enum InfoState
     {
@@ -21,6 +22,11 @@ public class Info : MonoBehaviour
     public float GetSanity()
     {
         return debugSanity;
+    }
+
+    public float GetHallucinationSanityThreshold()
+    {
+        return hallucinationSanityThreshold;
     }
 
     void Start()
