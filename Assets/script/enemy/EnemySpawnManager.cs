@@ -3,6 +3,7 @@ using UnityEngine;
 public sealed class EnemySpawnManager : MonoBehaviour
 {
     [SerializeField] private enemy01 enemyPrefab;
+    [SerializeField] private Info infoScript; // Reference to the Info script
     [SerializeField] private Transform center;
     [SerializeField] private int spawnCount = 4;
     [SerializeField] private float radius = 25f;
@@ -25,6 +26,7 @@ public sealed class EnemySpawnManager : MonoBehaviour
             position.y = spawnHeight;
 
             enemy01 enemy = Instantiate(enemyPrefab, position, Quaternion.identity, transform);
+            enemy.infoScript= infoScript; // Pass the reference to the Info script
             enemy.name = $"enemy01_{i + 1:00}";
         }
     }

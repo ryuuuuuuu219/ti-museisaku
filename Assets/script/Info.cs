@@ -7,6 +7,7 @@ public class Info : MonoBehaviour
     [SerializeField] Canvas infoCanvasA;
     [SerializeField] Canvas infoCanvasB;
     [SerializeField] Light infoLightA;
+    [SerializeField] float debugSanity = 10f;
 
     public enum InfoState
     {
@@ -16,6 +17,11 @@ public class Info : MonoBehaviour
     }
 
     public InfoState currentState = InfoState.A;
+
+    public float GetSanity()
+    {
+        return debugSanity;
+    }
 
     void Start()
     {
