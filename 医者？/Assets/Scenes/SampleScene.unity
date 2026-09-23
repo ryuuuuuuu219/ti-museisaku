@@ -1506,6 +1506,7 @@ GameObject:
   - component: {fileID: 2029655988}
   - component: {fileID: 2029655992}
   - component: {fileID: 2029655991}
+  - component: {fileID: 2029655993}
   m_Layer: 5
   m_Name: Button
   m_TagString: Untagged
@@ -1640,8 +1641,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Communicate
   buttonScript: {fileID: 2029655992}
+  infoScript: {fileID: 2029655993}
   userInput: 
   textUI: {fileID: 1044992210}
+  stage: 0
+  phase: 0
 --- !u!114 &2029655992
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1656,6 +1660,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::InputButton
   inputfield: {fileID: 1739358183}
   isActiveinputfield: 0
+--- !u!114 &2029655993
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2029655986}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 768160e1feaef294793fa716b0bdf449, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::info
+  textDataArray: []
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

@@ -24,13 +24,15 @@ public class info : MonoBehaviour
 {
     
     public TextData[] textDataArray;
+    int? replyID; 
 
     public bool Input(string userInput)
     {
         bool waiting = false;
-        foreach (TextData data in textDataArray)
+        for (var i=textDataArray.Length;i>=0;i--)
         {
-                bool allKeywordsPresent = true;
+            TextData data = textDataArray[i];
+            bool allKeywordsPresent = true;
             foreach (string keyword in data.keyword)
             {
                 if (userInput.Contains(keyword))
@@ -38,6 +40,7 @@ public class info : MonoBehaviour
                     if (data.unlockType==TextData.UnlockType.Keyword_any)
                     {
                         data.isLock = false;
+                        replyID = System.Array.IndexOf(textDataArray, data);
                     }
                 }
                 else
@@ -45,7 +48,7 @@ public class info : MonoBehaviour
                     allKeywordsPresent = false;
                 }
             }
-            if (data.unlockType==TextData.UnlockType.Keyword_all && !data.isLock)
+            if (data.unlockType==TextData.UnlockType.Keyword_all && data.isLock)
             {
                 data.isLock = !allKeywordsPresent;
             }
@@ -55,6 +58,12 @@ public class info : MonoBehaviour
 
     public string Output(int stage, int phase)
     {
+        if (replyID.HasValue)
+        {
+            textDataArray[replyID.Value].isOutputed = true;
+            replyID = null;
+            return textDataArray[replyID.Value].text;
+        }
         foreach (TextData data in textDataArray)
         {
             if (data.stage == stage && data.phase == phase && !data.isLock && !data.isOutputed)
