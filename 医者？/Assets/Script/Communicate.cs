@@ -17,12 +17,12 @@ public class Communicate : MonoBehaviour
     private void Start()
     {
         buttonScript.isActiveinputfield = true;
+        output();
     }
 
     public void OnClick()
     {
         userInput = buttonScript.OnClick();
-        Debug.Log("User Input: " + userInput);
         output();
 
     }
@@ -31,7 +31,7 @@ public class Communicate : MonoBehaviour
     {
         buttonScript.isActiveinputfield = infoScript.Input(userInput);
         textUI.text = "User Input: " + userInput+"\n"+
-            infoScript.Output(stage, phase);
+            "Reply: " + infoScript.Output(stage, phase);
     }
 
 }

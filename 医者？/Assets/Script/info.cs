@@ -10,6 +10,7 @@ public class TextData
     public int phase;
     public string text;
     public string[] keyword;
+    public int[] unlockPhase;
     public UnlockType unlockType;
 
     public enum UnlockType
@@ -17,6 +18,7 @@ public class TextData
         None,
         Keyword_all,
         Keyword_any,
+        Unlocked_phases,
     }
 }
 
@@ -28,11 +30,15 @@ public class info : MonoBehaviour
 
     public bool Input(string userInput)
     {
-        bool waiting = false;
+        bool waiting = true;
         for (var i=textDataArray.Length-1;i>=0;i--)
         {
             TextData data = textDataArray[i];
             bool allKeywordsPresent = true;
+            if(data.keyword.Length==0)
+            {
+                continue;
+            }
             foreach (string keyword in data.keyword)
             {
                 if (userInput.Contains(keyword))
@@ -108,12 +114,12 @@ public class info : MonoBehaviour
         TextData[] dataArray = new TextData[1];
         dataArray[0]=new TextData
         {
-            isLock = false,
+            isLock = false,//初期返答
             isWaitingInput = true,
             stage = 0,
             phase = 0,
             text = "母を助けてください",
-            keyword = null,
+            keyword = new string[] { "", },//初期返答
             unlockType = TextData.UnlockType.None
         };
         return dataArray;
