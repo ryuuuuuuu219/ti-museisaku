@@ -29,7 +29,7 @@ public class info : MonoBehaviour
     public bool Input(string userInput)
     {
         bool waiting = false;
-        for (var i=textDataArray.Length;i>=0;i--)
+        for (var i=textDataArray.Length-1;i>=0;i--)
         {
             TextData data = textDataArray[i];
             bool allKeywordsPresent = true;
@@ -129,7 +129,7 @@ public class info : MonoBehaviour
             stage = 0,
             phase = 0,
             text = "熱かったです",
-            keyword = ArrayCombine(preset_QuestionInput() , new string[] { "熱", "体温", } ),
+            keyword = new string[] { "熱", "体温", },
             unlockType = TextData.UnlockType.Keyword_any
         };
         return dataArray;
