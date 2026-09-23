@@ -1,234 +1,219 @@
-﻿using UnityEngine;
-
-[System.Serializable]
-public class TextData
-{
-    public bool isLock_keyword;
-    public bool isLock_phase;
-    public bool isOutputed=false;
-    public bool isWaitingInput;
-    public int stage;
-    public int phase;
-    public string text;
-    public string[] keyword = System.Array.Empty<string>();
-    public int[] unlockPhase = System.Array.Empty<int>();
-    public UnlockType unlockType;
-
-    public enum UnlockType
-    {
-        None,
-        Keyword_all,
-        Keyword_any,
-    }
-}
+using System;
+using System.Collections.Generic;
+using UnityEngine;
 
 public class info : MonoBehaviour
 {
-    
-    public TextData[] textDataArray = System.Array.Empty<TextData>();
-    int? replyID; 
+    public StageConversationData[] stageConversationData = Array.Empty<StageConversationData>();
+
+    private readonly HashSet<string> outputtedNodeIds = new();
+    private ConversationNode replyNode;
 
     public bool Input(string userInput, int stage)
     {
         userInput ??= string.Empty;
-        RefreshPhaseLocks();
+        replyNode = null;
 
-        bool waiting = true;
-        for (var i=textDataArray.Length-1;i>=0;i--)
+        StageConversationData stageData = FindStageData(stage);
+        if (stageData == null)
         {
-            TextData data = textDataArray[i];
-            if (data.stage != stage || data.isOutputed)
-            {
-                continue;
-            }
-            bool allKeywordsPresent = true;
-            if(data.keyword == null || data.keyword.Length==0)
-            {
-                continue;
-            }
-            if(data.isLock_phase)
-            {
-                continue;
-            }
-            foreach (string keyword in data.keyword)
-            {
-                if (userInput.Contains(keyword))
-                {
-                    if (data.unlockType==TextData.UnlockType.Keyword_any)
-                    {
-                        data.isLock_keyword = false;
-                        if (!replyID.HasValue)
-                        {
-                            replyID = i;
-                            waiting = data.isWaitingInput;
-                        }
-                    }
-                }
-                else
-                {
-                    allKeywordsPresent = false;
-                }
-            }
-            if (data.unlockType==TextData.UnlockType.Keyword_all && allKeywordsPresent)
-            {
-                data.isLock_keyword = false;
-                if (!replyID.HasValue)
-                {
-                    replyID = i;
-                    waiting = data.isWaitingInput;
-                }
-            }
+            return true;
         }
-        return waiting;
+
+        for (int i = stageData.nodes.Length - 1; i >= 0; i--)
+        {
+            ConversationNode node = stageData.nodes[i];
+            if (node == null || outputtedNodeIds.Contains(node.nodeId))
+            {
+                continue;
+            }
+
+            if (!ArePrerequisitesOutputted(node) || !MatchesKeywords(node, userInput))
+            {
+                continue;
+            }
+
+            replyNode = node;
+            return node.isWaitingInput;
+        }
+
+        return true;
     }
 
-    void RefreshPhaseLocks()
+    public string Output(int stage)
     {
-        foreach (TextData data in textDataArray)
+        if (replyNode != null)
         {
-            if (data.unlockPhase == null || data.unlockPhase.Length == 0)
+            ConversationNode selectedNode = replyNode;
+            replyNode = null;
+            outputtedNodeIds.Add(selectedNode.nodeId);
+            return selectedNode.text;
+        }
+
+        StageConversationData stageData = FindStageData(stage);
+        if (stageData == null)
+        {
+            return "?";
+        }
+
+        foreach (ConversationNode node in stageData.nodes)
+        {
+            if (node == null || outputtedNodeIds.Contains(node.nodeId))
             {
-                data.isLock_phase = false;
                 continue;
             }
 
-            bool allRequiredPhasesOutputed = true;
-            foreach (int requiredPhase in data.unlockPhase)
+            if (node.keywordMatchType != ConversationKeywordMatchType.None ||
+                !ArePrerequisitesOutputted(node))
             {
-                bool requiredPhaseFound = false;
-                bool requiredPhaseOutputed = true;
-                foreach (TextData candidate in textDataArray)
-                {
-                    if (candidate.stage != data.stage || candidate.phase != requiredPhase)
-                    {
-                        continue;
-                    }
-
-                    requiredPhaseFound = true;
-                    if (!candidate.isOutputed)
-                    {
-                        requiredPhaseOutputed = false;
-                        break;
-                    }
-                }
-
-                if (!requiredPhaseFound || !requiredPhaseOutputed)
-                {
-                    allRequiredPhasesOutputed = false;
-                    break;
-                }
+                continue;
             }
 
-            data.isLock_phase = !allRequiredPhasesOutputed;
+            outputtedNodeIds.Add(node.nodeId);
+            return node.text;
         }
-    }
 
-    public string Output(int stage, int phase)
-    {
-        if (replyID.HasValue)
-        {
-            int index = replyID.Value;
-            replyID = null;
-            textDataArray[index].isOutputed = true;
-            string text = textDataArray[index].text;
-            RefreshPhaseLocks();
-            return text;
-        }
-        foreach (TextData data in textDataArray)
-        {
-            if (data.stage == stage && data.phase == phase &&
-                !data.isLock_keyword && !data.isLock_phase && !data.isOutputed)
-            {
-                data.isOutputed = true;
-                string text = data.text;
-                RefreshPhaseLocks();
-                return text;
-            }
-        }
         return "?";
     }
 
+    private StageConversationData FindStageData(int stage)
+    {
+        foreach (StageConversationData data in stageConversationData)
+        {
+            if (data != null && data.stage == stage)
+            {
+                return data;
+            }
+        }
+
+        return null;
+    }
+
+    private bool MatchesKeywords(ConversationNode node, string userInput)
+    {
+        if (node.keywordMatchType == ConversationKeywordMatchType.None ||
+            node.keywords == null || node.keywords.Length == 0)
+        {
+            return false;
+        }
+
+        if (node.keywordMatchType == ConversationKeywordMatchType.Any)
+        {
+            foreach (string keyword in node.keywords)
+            {
+                if (!string.IsNullOrEmpty(keyword) && userInput.Contains(keyword))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        foreach (string keyword in node.keywords)
+        {
+            if (string.IsNullOrEmpty(keyword) || !userInput.Contains(keyword))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private bool ArePrerequisitesOutputted(ConversationNode node)
+    {
+        if (node.prerequisiteNodeIds == null || node.prerequisiteNodeIds.Length == 0)
+        {
+            return true;
+        }
+
+        foreach (string prerequisiteNodeId in node.prerequisiteNodeIds)
+        {
+            if (string.IsNullOrWhiteSpace(prerequisiteNodeId) ||
+                !outputtedNodeIds.Contains(prerequisiteNodeId))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
 
     private void Awake()
     {
-        textDataArray = ConcentrateArray(textDataArray, Data101());
-        textDataArray = ConcentrateArray(textDataArray, Data102());
-        textDataArray = ConcentrateArray(textDataArray, Data103());
-        textDataArray = ConcentrateArray(textDataArray, Data104());
+        ValidateData();
     }
 
-    TextData[] ConcentrateArray(TextData[] A, TextData[] B)
+    private void ValidateData()
     {
-        TextData[] result = new TextData[A.Length + B.Length];
-        A.CopyTo(result, 0);
-        B.CopyTo(result, A.Length);
-        return result;
-    }
+        var stageIds = new HashSet<int>();
+        var nodeIds = new HashSet<string>();
 
-    TextData[] Data101()
-    {
-        TextData[] dataArray = new TextData[1];
-        dataArray[0]=new TextData
+        foreach (StageConversationData data in stageConversationData)
         {
-            isLock_keyword = false,//初期返答
-            isWaitingInput = true,
-            stage = 0,
-            phase = 0,
-            text = "母を助けてください",
-            keyword = new string[] { "", },//初期返答
-            unlockType = TextData.UnlockType.None
-        };
-        return dataArray;
-    }
+            if (data == null)
+            {
+                Debug.LogError("ステージ会話データに未設定の参照があります。", this);
+                continue;
+            }
 
-    TextData[] Data102()
-    {
-        TextData[] dataArray = new TextData[1];
-        dataArray[0] = new TextData
+            if (!stageIds.Add(data.stage))
+            {
+                Debug.LogError($"stageが重複しています: {data.stage}", data);
+            }
+
+            if (data.nodes == null)
+            {
+                Debug.LogError($"会話ノード配列が未設定です: {data.name}", data);
+                continue;
+            }
+
+            foreach (ConversationNode node in data.nodes)
+            {
+                if (node == null)
+                {
+                    Debug.LogError($"{data.name}に未設定の会話ノードがあります。", data);
+                    continue;
+                }
+
+                if (string.IsNullOrWhiteSpace(node.nodeId))
+                {
+                    Debug.LogError($"nodeIdが未設定です: {data.name}", data);
+                    continue;
+                }
+
+                if (!nodeIds.Add(node.nodeId))
+                {
+                    Debug.LogError($"nodeIdが重複しています: {node.nodeId}", data);
+                }
+            }
+        }
+
+        foreach (StageConversationData data in stageConversationData)
         {
-            isLock_keyword = true,
-            isWaitingInput = true,
-            stage = 0,
-            phase = 1,
-            text = "熱いです",
-            keyword = new string[] { "熱", "体温", },//「体温はどうだった？」を想定
-            unlockType = TextData.UnlockType.Keyword_any
-        };
-        return dataArray;
-    }
+            if (data == null || data.nodes == null)
+            {
+                continue;
+            }
 
-    TextData[] Data103()
-    {
-        TextData[] dataArray = new TextData[1];
-        dataArray[0] = new TextData
-        {
-            isLock_keyword = true,
-            isWaitingInput = true,
-            stage = 0,
-            phase = 2,
-            text = "昨日からです",
-            keyword = new string[] { "いつ", "から", "変", },//「いつから体調が悪い？」を想定
-            unlockType = TextData.UnlockType.Keyword_any
-        };
-        return dataArray;
-    }
+            foreach (ConversationNode node in data.nodes)
+            {
+                if (node == null || node.prerequisiteNodeIds == null)
+                {
+                    continue;
+                }
 
-    TextData[] Data104()
-    {
-        TextData[] dataArray = new TextData[1];
-        dataArray[0] = new TextData
-        {
-            isLock_keyword = true,
-            isLock_phase = true,
-            isWaitingInput = true,
-            stage = 0,
-            phase = 3,
-            text = "熱かったです",
-            unlockPhase = new int[] { 2, }, //「昨日からです」の返答後に「昨日は何か変わったことした？」を想定
-            keyword = new string[] { "何", "行動", "変", },//「昨日は何か変わったことした？」を想定
-            unlockType = TextData.UnlockType.Keyword_any
-        };
-        return dataArray;
+                foreach (string prerequisiteNodeId in node.prerequisiteNodeIds)
+                {
+                    if (!nodeIds.Contains(prerequisiteNodeId))
+                    {
+                        Debug.LogError(
+                            $"{node.nodeId}の前提ノードが見つかりません: {prerequisiteNodeId}",
+                            data);
+                    }
+                }
+            }
+        }
     }
-
 }

@@ -12,7 +12,6 @@ public class Communicate : MonoBehaviour
     public TextMeshProUGUI textUI;
 
     public int stage=0;
-    public int phase=0;
 
     private void Start()
     {
@@ -31,7 +30,7 @@ public class Communicate : MonoBehaviour
     {
         buttonScript.isActiveinputfield = infoScript.Input(userInput, stage);
         textUI.text = "User Input: " + userInput+"\n"+
-            "Reply: " + infoScript.Output(stage, phase);
+            "Reply: " + infoScript.Output(stage);
     }
 
 }
