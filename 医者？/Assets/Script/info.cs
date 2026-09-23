@@ -46,7 +46,8 @@ public class info : MonoBehaviour
                     if (data.unlockType==TextData.UnlockType.Keyword_any)
                     {
                         data.isLock = false;
-                        replyID = System.Array.IndexOf(textDataArray, data);
+                        if(!data.isOutputed) replyID = System.Array.IndexOf(textDataArray, data);
+                        waiting = data.isWaitingInput;
                     }
                 }
                 else
@@ -54,9 +55,11 @@ public class info : MonoBehaviour
                     allKeywordsPresent = false;
                 }
             }
-            if (data.unlockType==TextData.UnlockType.Keyword_all && data.isLock)
+            if (data.unlockType==TextData.UnlockType.Keyword_all && data.isLock&&allKeywordsPresent)
             {
-                data.isLock = !allKeywordsPresent;
+                data.isLock = false;
+                if (!data.isOutputed) replyID = System.Array.IndexOf(textDataArray, data);
+                waiting = data.isWaitingInput;
             }
         }
         return waiting;
@@ -66,9 +69,10 @@ public class info : MonoBehaviour
     {
         if (replyID.HasValue)
         {
-            textDataArray[replyID.Value].isOutputed = true;
+            int index = replyID.Value;
             replyID = null;
-            return textDataArray[replyID.Value].text;
+            textDataArray[index].isOutputed = true;
+            return textDataArray[index].text;
         }
         foreach (TextData data in textDataArray)
         {
@@ -82,7 +86,7 @@ public class info : MonoBehaviour
     }
 
 
-    private void Start()
+    private void Awake()
     {
         textDataArray = ConcentrateArray(textDataArray, Data101());
         textDataArray = ConcentrateArray(textDataArray, Data102());
