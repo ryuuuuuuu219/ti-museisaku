@@ -29,7 +29,7 @@ public class Communicate : MonoBehaviour
 
     void output()
     {
-        buttonScript.isActiveinputfield = infoScript.Input(userInput);
+        buttonScript.isActiveinputfield = infoScript.Input(userInput, stage);
         textUI.text = "User Input: " + userInput+"\n"+
             "Reply: " + infoScript.Output(stage, phase);
     }

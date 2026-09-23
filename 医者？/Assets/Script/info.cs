@@ -10,8 +10,8 @@ public class TextData
     public int stage;
     public int phase;
     public string text;
-    public string[] keyword;
-    public int[] unlockPhase;
+    public string[] keyword = System.Array.Empty<string>();
+    public int[] unlockPhase = System.Array.Empty<int>();
     public UnlockType unlockType;
 
     public enum UnlockType
@@ -25,17 +25,24 @@ public class TextData
 public class info : MonoBehaviour
 {
     
-    public TextData[] textDataArray;
+    public TextData[] textDataArray = System.Array.Empty<TextData>();
     int? replyID; 
 
-    public bool Input(string userInput)
+    public bool Input(string userInput, int stage)
     {
+        userInput ??= string.Empty;
+        RefreshPhaseLocks();
+
         bool waiting = true;
         for (var i=textDataArray.Length-1;i>=0;i--)
         {
             TextData data = textDataArray[i];
+            if (data.stage != stage || data.isOutputed)
+            {
+                continue;
+            }
             bool allKeywordsPresent = true;
-            if(data.keyword.Length==0)
+            if(data.keyword == null || data.keyword.Length==0)
             {
                 continue;
             }
@@ -50,8 +57,11 @@ public class info : MonoBehaviour
                     if (data.unlockType==TextData.UnlockType.Keyword_any)
                     {
                         data.isLock_keyword = false;
-                        if(!data.isOutputed) replyID = System.Array.IndexOf(textDataArray, data);
-                        waiting = data.isWaitingInput;
+                        if (!replyID.HasValue)
+                        {
+                            replyID = i;
+                            waiting = data.isWaitingInput;
+                        }
                     }
                 }
                 else
@@ -59,22 +69,58 @@ public class info : MonoBehaviour
                     allKeywordsPresent = false;
                 }
             }
-            if (data.unlockType==TextData.UnlockType.Keyword_all && data.isLock_keyword && allKeywordsPresent)
+            if (data.unlockType==TextData.UnlockType.Keyword_all && allKeywordsPresent)
             {
                 data.isLock_keyword = false;
-                if (!data.isOutputed) replyID = System.Array.IndexOf(textDataArray, data);
-                waiting = data.isWaitingInput;
-            }
-            for(var j=0;j<data.unlockPhase.Length;j++)
-            {
-                int unlockPhase = data.unlockPhase[j];
-                if (data.phase == unlockPhase && !data.isLock_phase)
+                if (!replyID.HasValue)
                 {
-                    data.isLock_phase = false;
+                    replyID = i;
+                    waiting = data.isWaitingInput;
                 }
             }
         }
         return waiting;
+    }
+
+    void RefreshPhaseLocks()
+    {
+        foreach (TextData data in textDataArray)
+        {
+            if (data.unlockPhase == null || data.unlockPhase.Length == 0)
+            {
+                data.isLock_phase = false;
+                continue;
+            }
+
+            bool allRequiredPhasesOutputed = true;
+            foreach (int requiredPhase in data.unlockPhase)
+            {
+                bool requiredPhaseFound = false;
+                bool requiredPhaseOutputed = true;
+                foreach (TextData candidate in textDataArray)
+                {
+                    if (candidate.stage != data.stage || candidate.phase != requiredPhase)
+                    {
+                        continue;
+                    }
+
+                    requiredPhaseFound = true;
+                    if (!candidate.isOutputed)
+                    {
+                        requiredPhaseOutputed = false;
+                        break;
+                    }
+                }
+
+                if (!requiredPhaseFound || !requiredPhaseOutputed)
+                {
+                    allRequiredPhasesOutputed = false;
+                    break;
+                }
+            }
+
+            data.isLock_phase = !allRequiredPhasesOutputed;
+        }
     }
 
     public string Output(int stage, int phase)
@@ -84,14 +130,19 @@ public class info : MonoBehaviour
             int index = replyID.Value;
             replyID = null;
             textDataArray[index].isOutputed = true;
-            return textDataArray[index].text;
+            string text = textDataArray[index].text;
+            RefreshPhaseLocks();
+            return text;
         }
         foreach (TextData data in textDataArray)
         {
-            if (data.stage == stage && data.phase == phase && !data.isLock_keyword && !data.isOutputed)
+            if (data.stage == stage && data.phase == phase &&
+                !data.isLock_keyword && !data.isLock_phase && !data.isOutputed)
             {
                 data.isOutputed = true;
-                return data.text;
+                string text = data.text;
+                RefreshPhaseLocks();
+                return text;
             }
         }
         return "?";
@@ -113,19 +164,6 @@ public class info : MonoBehaviour
         B.CopyTo(result, A.Length);
         return result;
     }
-
-    string[] preset_QuestionInput()
-    {
-        return new string[] { "?", "？" };
-    }
-
-    string[] ArrayCombine(string[] A, string[] B)
-    {
-        string[] result = new string[A.Length + B.Length];
-        A.CopyTo(result, 0);
-        B.CopyTo(result, A.Length);
-        return result;
-    }   
 
     TextData[] Data101()
     {
@@ -181,6 +219,7 @@ public class info : MonoBehaviour
         dataArray[0] = new TextData
         {
             isLock_keyword = true,
+            isLock_phase = true,
             isWaitingInput = true,
             stage = 0,
             phase = 3,
