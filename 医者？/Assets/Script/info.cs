@@ -3,7 +3,8 @@
 [System.Serializable]
 public class TextData
 {
-    public bool isLock;
+    public bool isLock_keyword;
+    public bool isLock_phase;
     public bool isOutputed=false;
     public bool isWaitingInput;
     public int stage;
@@ -18,7 +19,6 @@ public class TextData
         None,
         Keyword_all,
         Keyword_any,
-        Unlocked_phases,
     }
 }
 
@@ -39,13 +39,17 @@ public class info : MonoBehaviour
             {
                 continue;
             }
+            if(data.isLock_phase)
+            {
+                continue;
+            }
             foreach (string keyword in data.keyword)
             {
                 if (userInput.Contains(keyword))
                 {
                     if (data.unlockType==TextData.UnlockType.Keyword_any)
                     {
-                        data.isLock = false;
+                        data.isLock_keyword = false;
                         if(!data.isOutputed) replyID = System.Array.IndexOf(textDataArray, data);
                         waiting = data.isWaitingInput;
                     }
@@ -55,11 +59,19 @@ public class info : MonoBehaviour
                     allKeywordsPresent = false;
                 }
             }
-            if (data.unlockType==TextData.UnlockType.Keyword_all && data.isLock&&allKeywordsPresent)
+            if (data.unlockType==TextData.UnlockType.Keyword_all && data.isLock_keyword && allKeywordsPresent)
             {
-                data.isLock = false;
+                data.isLock_keyword = false;
                 if (!data.isOutputed) replyID = System.Array.IndexOf(textDataArray, data);
                 waiting = data.isWaitingInput;
+            }
+            for(var j=0;j<data.unlockPhase.Length;j++)
+            {
+                int unlockPhase = data.unlockPhase[j];
+                if (data.phase == unlockPhase && !data.isLock_phase)
+                {
+                    data.isLock_phase = false;
+                }
             }
         }
         return waiting;
@@ -76,7 +88,7 @@ public class info : MonoBehaviour
         }
         foreach (TextData data in textDataArray)
         {
-            if (data.stage == stage && data.phase == phase && !data.isLock && !data.isOutputed)
+            if (data.stage == stage && data.phase == phase && !data.isLock_keyword && !data.isOutputed)
             {
                 data.isOutputed = true;
                 return data.text;
@@ -90,6 +102,8 @@ public class info : MonoBehaviour
     {
         textDataArray = ConcentrateArray(textDataArray, Data101());
         textDataArray = ConcentrateArray(textDataArray, Data102());
+        textDataArray = ConcentrateArray(textDataArray, Data103());
+        textDataArray = ConcentrateArray(textDataArray, Data104());
     }
 
     TextData[] ConcentrateArray(TextData[] A, TextData[] B)
@@ -118,7 +132,7 @@ public class info : MonoBehaviour
         TextData[] dataArray = new TextData[1];
         dataArray[0]=new TextData
         {
-            isLock = false,//初期返答
+            isLock_keyword = false,//初期返答
             isWaitingInput = true,
             stage = 0,
             phase = 0,
@@ -134,12 +148,45 @@ public class info : MonoBehaviour
         TextData[] dataArray = new TextData[1];
         dataArray[0] = new TextData
         {
-            isLock = true,
+            isLock_keyword = true,
             isWaitingInput = true,
             stage = 0,
-            phase = 0,
+            phase = 1,
+            text = "熱いです",
+            keyword = new string[] { "熱", "体温", },//「体温はどうだった？」を想定
+            unlockType = TextData.UnlockType.Keyword_any
+        };
+        return dataArray;
+    }
+
+    TextData[] Data103()
+    {
+        TextData[] dataArray = new TextData[1];
+        dataArray[0] = new TextData
+        {
+            isLock_keyword = true,
+            isWaitingInput = true,
+            stage = 0,
+            phase = 2,
+            text = "昨日からです",
+            keyword = new string[] { "いつ", "から", "変", },//「いつから体調が悪い？」を想定
+            unlockType = TextData.UnlockType.Keyword_any
+        };
+        return dataArray;
+    }
+
+    TextData[] Data104()
+    {
+        TextData[] dataArray = new TextData[1];
+        dataArray[0] = new TextData
+        {
+            isLock_keyword = true,
+            isWaitingInput = true,
+            stage = 0,
+            phase = 3,
             text = "熱かったです",
-            keyword = new string[] { "熱", "体温", },
+            unlockPhase = new int[] { 2, }, //「昨日からです」の返答後に「昨日は何か変わったことした？」を想定
+            keyword = new string[] { "何", "行動", "変", },//「昨日は何か変わったことした？」を想定
             unlockType = TextData.UnlockType.Keyword_any
         };
         return dataArray;
