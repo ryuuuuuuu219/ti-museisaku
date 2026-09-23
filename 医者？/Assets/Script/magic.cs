@@ -69,6 +69,7 @@ public class magic : MonoBehaviour
     {
         buttonScript.inputfield.text = magicName;
         currentMP -= GetManaCost(magicName);
+        MPlabel.text = "MP: " + currentMP.ToString("F0");
         MPCheck();
     }
 
