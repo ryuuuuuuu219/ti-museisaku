@@ -28,11 +28,21 @@ public class magic : MonoBehaviour
 
     public MagicData[] magicList = new MagicData[]
     {
-        new MagicData("Fireball", 20f),
-        new MagicData("Ice Shard", 15f),
-        new MagicData("Lightning Bolt", 25f),
-        new MagicData("Heal", 10f),
-        new MagicData("Wind Gust", 5f)
+        new MagicData("血液検査", 10f),
+        new MagicData("視覚強化魔法", 10f),
+        new MagicData("超音波", 10f),
+        new MagicData("CT", 10f),
+        new MagicData("レントゲン", 10f),
+        new MagicData("MRI（雷魔法＝磁場）", 10f),
+        new MagicData("MRI魔力版", 10f),
+        new MagicData("神経系走査", 10f),
+        new MagicData("生体電気確認", 10f),
+        new MagicData("分子解析", 10f),
+        new MagicData("化学反応加減速", 10f),
+        new MagicData("分子構造操作", 10f),
+        new MagicData("浄化", 10f),
+        new MagicData("瀉血", 10f),
+        new MagicData("老眼鏡（モノクル？）とピンセットで異物排除", 10f)
     };
 
     private void Start()

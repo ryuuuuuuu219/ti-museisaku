@@ -2005,16 +2005,36 @@ MonoBehaviour:
   ScrollPrefab: {fileID: 241058474928075569, guid: 8b7e71fdaa746c04499cb1662b4b4fe1, type: 3}
   magicButtons: []
   magicList:
-  - magicName: Fireball
-    manaCost: 20
-  - magicName: Ice Shard
-    manaCost: 15
-  - magicName: Lightning Bolt
-    manaCost: 25
-  - magicName: Heal
+  - magicName: 血液検査
     manaCost: 10
-  - magicName: Wind Gust
-    manaCost: 5
+  - magicName: 視覚強化魔法
+    manaCost: 10
+  - magicName: 超音波
+    manaCost: 10
+  - magicName: CT
+    manaCost: 10
+  - magicName: レントゲン
+    manaCost: 10
+  - magicName: MRI（雷魔法＝磁場）
+    manaCost: 10
+  - magicName: MRI魔力版
+    manaCost: 10
+  - magicName: 神経系走査
+    manaCost: 10
+  - magicName: 生体電気確認
+    manaCost: 10
+  - magicName: 分子解析
+    manaCost: 10
+  - magicName: 化学反応加減速
+    manaCost: 10
+  - magicName: 分子構造操作
+    manaCost: 10
+  - magicName: 浄化
+    manaCost: 10
+  - magicName: 瀉血
+    manaCost: 10
+  - magicName: 老眼鏡（モノクル？）とピンセットで異物排除
+    manaCost: 10
 --- !u!4 &1205115210
 Transform:
   m_ObjectHideFlags: 0
