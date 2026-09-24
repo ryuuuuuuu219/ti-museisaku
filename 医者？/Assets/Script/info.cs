@@ -40,40 +40,46 @@ public class info : MonoBehaviour
         return true;
     }
 
-    public string Output(int stage)
+    public bool TryOutput(int stage, out string text, out bool isWaitingInput)
     {
-        if (replyNode != null)
-        {
-            ConversationNode selectedNode = replyNode;
-            replyNode = null;
-            outputtedNodeIds.Add(selectedNode.nodeId);
-            return selectedNode.text;
-        }
+        ConversationNode selectedNode = replyNode;
+        replyNode = null;
 
-        StageConversationData stageData = FindStageData(stage);
-        if (stageData == null)
+        if (selectedNode == null)
         {
-            return "?";
-        }
-
-        foreach (ConversationNode node in stageData.nodes)
-        {
-            if (node == null || outputtedNodeIds.Contains(node.nodeId))
+            StageConversationData stageData = FindStageData(stage);
+            if (stageData != null)
             {
-                continue;
-            }
+                foreach (ConversationNode node in stageData.nodes)
+                {
+                    if (node == null || outputtedNodeIds.Contains(node.nodeId))
+                    {
+                        continue;
+                    }
 
-            if (node.keywordMatchType != ConversationKeywordMatchType.None ||
-                !ArePrerequisitesOutputted(node))
-            {
-                continue;
-            }
+                    if (node.keywordMatchType != ConversationKeywordMatchType.None ||
+                        !ArePrerequisitesOutputted(node))
+                    {
+                        continue;
+                    }
 
-            outputtedNodeIds.Add(node.nodeId);
-            return node.text;
+                    selectedNode = node;
+                    break;
+                }
+            }
         }
 
-        return "?";
+        if (selectedNode == null)
+        {
+            text = "?";
+            isWaitingInput = true;
+            return false;
+        }
+
+        outputtedNodeIds.Add(selectedNode.nodeId);
+        text = selectedNode.text;
+        isWaitingInput = selectedNode.isWaitingInput;
+        return true;
     }
 
     public string[] GetAvailableKeywords(int stage)
@@ -136,6 +142,19 @@ public class info : MonoBehaviour
             foreach (string keyword in node.keywords)
             {
                 if (!string.IsNullOrEmpty(keyword) && userInput.Contains(keyword))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        if (node.keywordMatchType == ConversationKeywordMatchType.Exact)
+        {
+            foreach (string keyword in node.keywords)
+            {
+                if (!string.IsNullOrEmpty(keyword) && userInput == keyword)
                 {
                     return true;
                 }

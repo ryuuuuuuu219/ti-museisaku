@@ -29,6 +29,16 @@ public class magic : MonoBehaviour
     public MagicData[] magicList = new MagicData[]
     {
         new MagicData("血液検査", 10f),
+        new MagicData("スキャン魔法", 10f),
+        new MagicData("毒性解析魔法", 10f),
+        new MagicData("解毒", 10f),
+        new MagicData("浄化", 10f),
+        new MagicData("呪い解除", 10f),
+        new MagicData("憑依解除", 10f),
+        new MagicData("虫下し", 10f),
+        new MagicData("組織修復", 10f),
+        new MagicData("異物排出", 10f),
+        new MagicData("魔力正常化", 10f),
         new MagicData("視覚強化魔法", 10f),
         new MagicData("超音波", 10f),
         new MagicData("CT", 10f),
@@ -40,7 +50,6 @@ public class magic : MonoBehaviour
         new MagicData("分子解析", 10f),
         new MagicData("化学反応加減速", 10f),
         new MagicData("分子構造操作", 10f),
-        new MagicData("浄化", 10f),
         new MagicData("瀉血", 10f),
         new MagicData("老眼鏡（モノクル？）とピンセットで異物排除", 10f)
     };

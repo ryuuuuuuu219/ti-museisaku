@@ -42,7 +42,7 @@ MonoBehaviour:
     isWaitingInput: 1
   - nodeId: S01-C004
     questionExample: 昨日は何か変わったことした？
-    text: 熱かったです
+    text: "特にはしてないです　いつも通り薬草を摘みに行って……\n（薬草……草むらをかき分けた際に切創をもらった？）"
     keywords:
     - 何
     - 行動
@@ -50,4 +50,75 @@ MonoBehaviour:
     keywordMatchType: 1
     prerequisiteNodeIds:
     - S01-C003
+    isWaitingInput: 1
+  - nodeId: S01-C005
+    questionExample: 変な傷はあった？
+    text: "あ……草むらで手を切ったって言ってました　でもいつものことだって思って\n（魔法で傷を確認してみるか）"
+    keywords:
+    - 傷
+    - きず
+    - キズ
+    keywordMatchType: 1
+    prerequisiteNodeIds:
+    - S01-C004
+    isWaitingInput: 1
+  - nodeId: S01-C006
+    questionExample: スキャン魔法
+    text: <<切創及び裂傷を確認　体内に異物（無機物）を確認>>
+    keywords:
+    - スキャン魔法
+    keywordMatchType: 3
+    prerequisiteNodeIds: []
+    isWaitingInput: 0
+  - nodeId: S01-C007
+    questionExample: 組織修復
+    text: "目に見える傷は無くなった\nしかし、数時間後急速に容体が悪化\n帰らない人となった\n（BadEnd1-1：異物残留）"
+    keywords:
+    - 組織修復
+    keywordMatchType: 3
+    prerequisiteNodeIds: []
+    isWaitingInput: 1
+  - nodeId: S01-C008
+    questionExample: 血液検査
+    text: <<低血糖を確認>>
+    keywords:
+    - 血液検査
+    keywordMatchType: 3
+    prerequisiteNodeIds: []
+    isWaitingInput: 0
+  - nodeId: S01-C009
+    questionExample: 毒性解析魔法／分子解析
+    text: <<検出あり　脂質分解酵素結合構造を確認>>
+    keywords:
+    - 毒性解析魔法
+    - 分子解析
+    keywordMatchType: 3
+    prerequisiteNodeIds: []
+    isWaitingInput: 0
+  - nodeId: S01-C010
+    questionExample: 自動推論
+    text: "（異物とは……毒か。それが皮下にとどまって脂質から糖へ分解する代謝を阻害している）\n（ならば）"
+    keywords: []
+    keywordMatchType: 0
+    prerequisiteNodeIds:
+    - S01-C006
+    - S01-C008
+    - S01-C009
+    isWaitingInput: 1
+  - nodeId: S01-C011
+    questionExample: 異物排出
+    text: "光が患部を包み、人体の肌には似つかわしくない白い繊維状の異物が、突き出るように排出された\n（あとは、傷を治すだけだ）"
+    keywords:
+    - 異物排出
+    keywordMatchType: 3
+    prerequisiteNodeIds: []
+    isWaitingInput: 1
+  - nodeId: S01-C012
+    questionExample: 組織修復
+    text: "目に見える傷は無くなった\n体内をむしばむ毒も排除したためよほど患者は快方へ向かうだろう"
+    keywords:
+    - 組織修復
+    keywordMatchType: 3
+    prerequisiteNodeIds:
+    - S01-C011
     isWaitingInput: 1

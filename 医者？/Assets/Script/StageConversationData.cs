@@ -32,4 +32,5 @@ public enum ConversationKeywordMatchType
     None,
     Any,
     All,
+    Exact,
 }

@@ -1,6 +1,7 @@
 ﻿using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using System.Text;
 
 public class Communicate : MonoBehaviour
 {
@@ -11,6 +12,7 @@ public class Communicate : MonoBehaviour
     public string userInput;
 
     public TextMeshProUGUI textUI;
+    public ScrollRect logScrollRect;
 
     public int stage=0;
 
@@ -28,7 +30,7 @@ public class Communicate : MonoBehaviour
         {
             buttonScript.inputfield.text = userInput;
             buttonScript.isActiveinputfield = true;
-            textUI.text = "MPが足りません。";
+            AppendLog("MPが足りません。");
             return;
         }
 
@@ -38,9 +40,47 @@ public class Communicate : MonoBehaviour
 
     void output()
     {
-        buttonScript.isActiveinputfield = infoScript.Input(userInput, stage);
-        textUI.text = "User Input: " + userInput+"\n"+
-            "Reply: " + infoScript.Output(stage);
+        infoScript.Input(userInput, stage);
+
+        var log = new StringBuilder("User Input: ");
+        log.Append(userInput);
+
+        bool hasOutput = false;
+        bool isWaitingInput = false;
+
+        while (infoScript.TryOutput(stage, out string reply, out isWaitingInput))
+        {
+            log.Append("\nReply: ");
+            log.Append(reply);
+            hasOutput = true;
+
+            if (isWaitingInput)
+            {
+                break;
+            }
+        }
+
+        if (!hasOutput)
+        {
+            log.Append("\nReply: ?");
+        }
+
+        buttonScript.isActiveinputfield = isWaitingInput || !hasOutput;
+        AppendLog(log.ToString());
+    }
+
+    void AppendLog(string message)
+    {
+        if (!string.IsNullOrEmpty(textUI.text))
+        {
+            textUI.text += "\n\n";
+        }
+
+        textUI.text += message;
+
+        Canvas.ForceUpdateCanvases();
+        LayoutRebuilder.ForceRebuildLayoutImmediate(textUI.rectTransform);
+        logScrollRect.verticalNormalizedPosition = 0f;
     }
 
 }
