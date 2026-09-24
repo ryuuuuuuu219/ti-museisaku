@@ -77,6 +77,8 @@ MonoBehaviour:
     - 組織修復
     keywordMatchType: 3
     prerequisiteNodeIds: []
+    blockingNodeIds:
+    - S01-C011
     isWaitingInput: 1
   - nodeId: S01-C008
     questionExample: 血液検査

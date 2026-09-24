@@ -24,6 +24,7 @@ public class ConversationNode
     public string[] keywords = Array.Empty<string>();
     public ConversationKeywordMatchType keywordMatchType;
     public string[] prerequisiteNodeIds = Array.Empty<string>();
+    public string[] blockingNodeIds = Array.Empty<string>();
     public bool isWaitingInput = true;
 }
 

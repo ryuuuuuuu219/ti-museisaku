@@ -20,24 +20,27 @@ public class info : MonoBehaviour
             return true;
         }
 
-        for (int i = stageData.nodes.Length - 1; i >= 0; i--)
+        foreach (ConversationNode node in stageData.nodes)
         {
-            ConversationNode node = stageData.nodes[i];
             if (node == null || outputtedNodeIds.Contains(node.nodeId))
             {
                 continue;
             }
 
-            if (!ArePrerequisitesOutputted(node) || !MatchesKeywords(node, userInput))
+            if (!ArePrerequisitesOutputted(node) ||
+                IsBlockedByOutputtedNode(node) ||
+                !MatchesKeywords(node, userInput))
             {
                 continue;
             }
 
-            replyNode = node;
-            return node.isWaitingInput;
+            if (replyNode == null || HasHigherPriority(node, replyNode))
+            {
+                replyNode = node;
+            }
         }
 
-        return true;
+        return replyNode == null || replyNode.isWaitingInput;
     }
 
     public bool TryOutput(int stage, out string text, out bool isWaitingInput)
@@ -58,13 +61,16 @@ public class info : MonoBehaviour
                     }
 
                     if (node.keywordMatchType != ConversationKeywordMatchType.None ||
-                        !ArePrerequisitesOutputted(node))
+                        !ArePrerequisitesOutputted(node) ||
+                        IsBlockedByOutputtedNode(node))
                     {
                         continue;
                     }
 
-                    selectedNode = node;
-                    break;
+                    if (selectedNode == null || HasHigherPriority(node, selectedNode))
+                    {
+                        selectedNode = node;
+                    }
                 }
             }
         }
@@ -99,6 +105,7 @@ public class info : MonoBehaviour
                 outputtedNodeIds.Contains(node.nodeId) ||
                 node.keywordMatchType == ConversationKeywordMatchType.None ||
                 !ArePrerequisitesOutputted(node) ||
+                IsBlockedByOutputtedNode(node) ||
                 node.keywords == null)
             {
                 continue;
@@ -193,6 +200,56 @@ public class info : MonoBehaviour
         return true;
     }
 
+    private bool IsBlockedByOutputtedNode(ConversationNode node)
+    {
+        if (node.blockingNodeIds == null || node.blockingNodeIds.Length == 0)
+        {
+            return false;
+        }
+
+        foreach (string blockingNodeId in node.blockingNodeIds)
+        {
+            if (!string.IsNullOrWhiteSpace(blockingNodeId) &&
+                outputtedNodeIds.Contains(blockingNodeId))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static bool HasHigherPriority(ConversationNode candidate, ConversationNode current)
+    {
+        int candidateNumber = GetNodeNumber(candidate.nodeId);
+        int currentNumber = GetNodeNumber(current.nodeId);
+
+        if (candidateNumber != currentNumber)
+        {
+            return candidateNumber < currentNumber;
+        }
+
+        return string.CompareOrdinal(candidate.nodeId, current.nodeId) < 0;
+    }
+
+    private static int GetNodeNumber(string nodeId)
+    {
+        if (string.IsNullOrWhiteSpace(nodeId))
+        {
+            return int.MaxValue;
+        }
+
+        int markerIndex = nodeId.LastIndexOf("-C", StringComparison.Ordinal);
+        if (markerIndex < 0 || markerIndex + 2 >= nodeId.Length)
+        {
+            return int.MaxValue;
+        }
+
+        return int.TryParse(nodeId.Substring(markerIndex + 2), out int nodeNumber)
+            ? nodeNumber
+            : int.MaxValue;
+    }
+
     private void Awake()
     {
         ValidateData();
@@ -236,6 +293,13 @@ public class info : MonoBehaviour
                     continue;
                 }
 
+                if (GetNodeNumber(node.nodeId) == int.MaxValue)
+                {
+                    Debug.LogError(
+                        $"nodeIdから優先番号を取得できません: {node.nodeId}",
+                        data);
+                }
+
                 if (!nodeIds.Add(node.nodeId))
                 {
                     Debug.LogError($"nodeIdが重複しています: {node.nodeId}", data);
@@ -252,18 +316,34 @@ public class info : MonoBehaviour
 
             foreach (ConversationNode node in data.nodes)
             {
-                if (node == null || node.prerequisiteNodeIds == null)
+                if (node == null)
                 {
                     continue;
                 }
 
-                foreach (string prerequisiteNodeId in node.prerequisiteNodeIds)
+                if (node.prerequisiteNodeIds != null)
                 {
-                    if (!nodeIds.Contains(prerequisiteNodeId))
+                    foreach (string prerequisiteNodeId in node.prerequisiteNodeIds)
                     {
-                        Debug.LogError(
-                            $"{node.nodeId}の前提ノードが見つかりません: {prerequisiteNodeId}",
-                            data);
+                        if (!nodeIds.Contains(prerequisiteNodeId))
+                        {
+                            Debug.LogError(
+                                $"{node.nodeId}の前提ノードが見つかりません: {prerequisiteNodeId}",
+                                data);
+                        }
+                    }
+                }
+
+                if (node.blockingNodeIds != null)
+                {
+                    foreach (string blockingNodeId in node.blockingNodeIds)
+                    {
+                        if (!nodeIds.Contains(blockingNodeId))
+                        {
+                            Debug.LogError(
+                                $"{node.nodeId}の除外ノードが見つかりません: {blockingNodeId}",
+                                data);
+                        }
                     }
                 }
             }
