@@ -76,6 +76,40 @@ public class info : MonoBehaviour
         return "?";
     }
 
+    public string[] GetAvailableKeywords(int stage)
+    {
+        StageConversationData stageData = FindStageData(stage);
+        if (stageData == null || stageData.nodes == null)
+        {
+            return Array.Empty<string>();
+        }
+
+        var keywords = new List<string>();
+        var addedKeywords = new HashSet<string>();
+
+        foreach (ConversationNode node in stageData.nodes)
+        {
+            if (node == null ||
+                outputtedNodeIds.Contains(node.nodeId) ||
+                node.keywordMatchType == ConversationKeywordMatchType.None ||
+                !ArePrerequisitesOutputted(node) ||
+                node.keywords == null)
+            {
+                continue;
+            }
+
+            foreach (string keyword in node.keywords)
+            {
+                if (!string.IsNullOrWhiteSpace(keyword) && addedKeywords.Add(keyword))
+                {
+                    keywords.Add(keyword);
+                }
+            }
+        }
+
+        return keywords.ToArray();
+    }
+
     private StageConversationData FindStageData(int stage)
     {
         foreach (StageConversationData data in stageConversationData)

@@ -68,21 +68,30 @@ public class magic : MonoBehaviour
     public void OnMagicSelected(string magicName)
     {
         buttonScript.inputfield.text = magicName;
-        currentMP -= GetManaCost(magicName);
-        MPlabel.text = "MP: " + currentMP.ToString("F0");
-        MPCheck();
     }
 
-    float GetManaCost(string magicName)
+    public bool TryConsumeMagic(string input)
     {
         foreach (var magic in magicList)
         {
-            if (magic.magicName == magicName)
+            if (magic.magicName != input)
             {
-                return magic.manaCost;
+                continue;
             }
+
+            if (currentMP < magic.manaCost)
+            {
+                return false;
+            }
+
+            currentMP -= magic.manaCost;
+            MPlabel.text = "MP: " + currentMP.ToString("F0");
+            MPCheck();
+            return true;
         }
-        return 0f;
+
+        // 魔法名ではない通常の入力はMP消費の対象外。
+        return true;
     }
 
 }

@@ -6,6 +6,7 @@ public class Communicate : MonoBehaviour
 {
     public InputButton buttonScript;
     public info infoScript;
+    public magic magicScript;
 
     public string userInput;
 
@@ -22,6 +23,15 @@ public class Communicate : MonoBehaviour
     public void OnClick()
     {
         userInput = buttonScript.OnClick();
+
+        if (!magicScript.TryConsumeMagic(userInput))
+        {
+            buttonScript.inputfield.text = userInput;
+            buttonScript.isActiveinputfield = true;
+            textUI.text = "MPが足りません。";
+            return;
+        }
+
         output();
 
     }
