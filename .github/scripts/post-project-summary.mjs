@@ -14,14 +14,8 @@ if (!discordWebhookUrl) {
   throw new Error("DISCORD_WEBHOOK_URL is not set.");
 }
 
-const contextFiles = [
-  "memo/README.md",
-  "memo/ROADMAP.md",
-  "memo/タスク一覧/進捗確認.md",
-  "memo/タスク一覧/整理後/ロードマップ.md",
-  "document/README.md",
-  "document/ユーザー向け/README.md",
-];
+const monitoredMemoDirectory = "memo";
+const readableMemoExtensions = /\.(?:md|txt|json|ya?ml|csv|tsv)$/i;
 
 function runGit(args) {
   try {
@@ -42,6 +36,42 @@ function readContextFile(path) {
   }
 
   return `\n\n--- ${path} ---\n${text.slice(0, 12000)}`;
+}
+
+function getChangedMemoFiles() {
+  const changedFiles =
+    runGit([
+      "-c",
+      "core.quotePath=false",
+      "diff",
+      "--name-only",
+      "--diff-filter=ACMRT",
+      "HEAD~1",
+      "HEAD",
+      "--",
+      monitoredMemoDirectory,
+    ]) ||
+    runGit([
+      "-c",
+      "core.quotePath=false",
+      "show",
+      "--pretty=format:",
+      "--name-only",
+      "--diff-filter=ACMRT",
+      "HEAD",
+      "--",
+      monitoredMemoDirectory,
+    ]);
+
+  return changedFiles
+    .split(/\r?\n/)
+    .map((path) => path.trim().replaceAll("\\", "/"))
+    .filter(
+      (path) =>
+        path.startsWith(`${monitoredMemoDirectory}/`) &&
+        readableMemoExtensions.test(path) &&
+        existsSync(path),
+    );
 }
 
 function extractOutputText(response) {
@@ -75,6 +105,7 @@ const commitBody = runGit(["log", "-1", "--pretty=%b"]);
 const changedStat =
   runGit(["diff", "--stat", "HEAD~1", "HEAD"]) ||
   runGit(["show", "--stat", "--oneline", "--no-renames", "HEAD"]);
+const contextFiles = getChangedMemoFiles();
 
 const repo = process.env.GITHUB_REPOSITORY || "";
 const runUrl =

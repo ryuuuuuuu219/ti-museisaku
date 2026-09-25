@@ -9,7 +9,7 @@
 ただし、移動先プロジェクトに合わせて次の確認が必要です。
 
 - GitHub Secrets に OpenAI API key と Discord webhook URL が入っているか
-- `.github/scripts/post-project-summary.mjs` の `contextFiles` が移動先の資料パスに合っているか
+- `.github/scripts/post-project-summary.mjs` の `monitoredMemoDirectory` が移動先の資料パスに合っているか
 - `.github/workflows/discord-project-summary.yml` の `paths` が移動先で監視したいファイルに合っているか
 - 必要なら GitHub Variables の `OPENAI_MODEL` を移動先で使いたいモデル名に変更する
 
@@ -51,21 +51,16 @@ env:
 
 ## 要約に使う資料を変更する
 
-要約対象の資料は `.github/scripts/post-project-summary.mjs` の `contextFiles` で指定しています。
+要約対象は、直前の commit で追加・変更・改名された `memo/` 配下のテキストファイルです。
+対象拡張子は `.md`、`.txt`、`.json`、`.yml`、`.yaml`、`.csv`、`.tsv` です。削除されたファイルは Git の変更統計には出ますが、本文は存在しないため読み込みません。
 
-移動先に `memo/README.md` や `document/README.md` がない場合は、移動先の `README.md`、設計メモ、タスク一覧などに置き換えてください。
+移動先で別のフォルダを監視する場合は、`monitoredMemoDirectory` と workflow の `paths` を同じフォルダに変更してください。
 
 例:
 
 ```js
-const contextFiles = [
-  "README.md",
-  "docs/ROADMAP.md",
-  "docs/tasks.md",
-];
+const monitoredMemoDirectory = "docs";
 ```
-
-存在しないファイルは無視されますが、全部存在しないと要約の材料が少なくなります。
 
 ## workflow の発火対象を変更する
 
