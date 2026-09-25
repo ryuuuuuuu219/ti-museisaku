@@ -6,10 +6,6 @@ const discordWebhookUrl = process.env.DISCORD_WEBHOOK_URL;
 const model = process.env.OPENAI_MODEL || "gpt-5.4-mini";
 const extraContext = process.env.EXTRA_CONTEXT || "";
 
-if (!openaiApiKey) {
-  throw new Error("OPENAI_API_KEY is not set.");
-}
-
 if (!discordWebhookUrl) {
   throw new Error("DISCORD_WEBHOOK_URL is not set.");
 }
@@ -99,6 +95,38 @@ function truncateForDiscord(text) {
   return `${text.slice(0, 1850).trimEnd()}\n\n...`;
 }
 
+function createFallbackSummary({
+  commitHash,
+  commitTitle,
+  changedStat,
+  contextFiles,
+  extraContext,
+}) {
+  const changedLines = changedStat
+    ? changedStat.split(/\r?\n/).slice(0, 12).map((line) => `- ${line}`)
+    : ["- Gitの変更統計を取得できませんでした。"];
+  const memoLines = contextFiles.length
+    ? [
+        "",
+        "### 更新されたメモ",
+        ...contextFiles.slice(0, 12).map((path) => `- ${path}`),
+      ]
+    : [];
+
+  return [
+    "## 今日の共有",
+    `- ${commitHash || "commit不明"} ${commitTitle || "更新内容不明"}`,
+    ...(extraContext ? [`- 補足: ${extraContext}`] : []),
+    "",
+    "## 進んだこと",
+    ...changedLines,
+    ...memoLines,
+    "",
+    "_OpenAI APIを利用できなかったため、Gitの変更情報から簡易共有を作成しました。_",
+  ]
+    .join("\n");
+}
+
 const commitTitle = runGit(["log", "-1", "--pretty=%s"]);
 const commitHash = runGit(["rev-parse", "--short", "HEAD"]);
 const commitBody = runGit(["log", "-1", "--pretty=%b"]);
@@ -133,31 +161,49 @@ const instructions = [
   "メンション、@everyone、@here、過度な絵文字は使わないでください。",
 ].join("\n");
 
-const openaiResponse = await fetch("https://api.openai.com/v1/responses", {
-  method: "POST",
-  headers: {
-    Authorization: `Bearer ${openaiApiKey}`,
-    "Content-Type": "application/json",
-  },
-  body: JSON.stringify({
-    model,
-    instructions,
-    input: context,
-    max_output_tokens: 900,
-    store: false,
-  }),
-});
+let summary = "";
 
-if (!openaiResponse.ok) {
-  const errorBody = await openaiResponse.text();
-  throw new Error(`OpenAI request failed: ${openaiResponse.status} ${errorBody}`);
+if (openaiApiKey) {
+  try {
+    const openaiResponse = await fetch("https://api.openai.com/v1/responses", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${openaiApiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model,
+        instructions,
+        input: context,
+        max_output_tokens: 900,
+        store: false,
+      }),
+    });
+
+    if (openaiResponse.ok) {
+      const openaiJson = await openaiResponse.json();
+      summary = extractOutputText(openaiJson);
+      if (!summary) {
+        console.warn("OpenAI response did not include output text.");
+      }
+    } else {
+      console.warn(`OpenAI request failed with status ${openaiResponse.status}.`);
+    }
+  } catch (error) {
+    console.warn(`OpenAI request failed: ${error.message}`);
+  }
+} else {
+  console.warn("OPENAI_API_KEY is not set.");
 }
 
-const openaiJson = await openaiResponse.json();
-const summary = extractOutputText(openaiJson);
-
 if (!summary) {
-  throw new Error("OpenAI response did not include output text.");
+  summary = createFallbackSummary({
+    commitHash,
+    commitTitle,
+    changedStat,
+    contextFiles,
+    extraContext,
+  });
 }
 
 const content = truncateForDiscord(

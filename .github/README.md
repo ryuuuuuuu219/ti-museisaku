@@ -29,6 +29,8 @@
 
 移動先リポジトリにも、上記のどれかの名前で Secret を登録してあれば、workflow ファイルを変更しなくても動きます。
 
+OpenAI API の残高不足、通信エラー、API key 未設定などで AI 要約を作れない場合は、commit 名と Git の変更統計から簡易共有を作って Discord 投稿を続行します。Discord webhook 自体が使えない場合は workflow を失敗させます。
+
 ## Secret をどう変更するか
 
 GitHub の画面で変更する場合:
