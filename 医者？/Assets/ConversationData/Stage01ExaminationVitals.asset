@@ -13,14 +13,15 @@ MonoBehaviour:
   m_Name: Stage01ExaminationVitals
   m_EditorClassIdentifier: Assembly-CSharp::ExaminationStageVitalsData
   stage: 0
+  mpZeroPolicy: 1
   heartRateByMp:
     serializedVersion: 2
     m_Curve:
     - serializedVersion: 3
       time: 0
-      value: 88
-      inSlope: 0
-      outSlope: 0
+      value: 130
+      inSlope: -0.42
+      outSlope: -0.42
       tangentMode: 0
       weightedMode: 0
       inWeight: 0
@@ -28,8 +29,8 @@ MonoBehaviour:
     - serializedVersion: 3
       time: 100
       value: 88
-      inSlope: 0
-      outSlope: 0
+      inSlope: -0.42
+      outSlope: -0.42
       tangentMode: 0
       weightedMode: 0
       inWeight: 0
@@ -42,9 +43,9 @@ MonoBehaviour:
     m_Curve:
     - serializedVersion: 3
       time: 0
-      value: 5
-      inSlope: 0
-      outSlope: 0
+      value: 8
+      inSlope: -0.03
+      outSlope: -0.03
       tangentMode: 0
       weightedMode: 0
       inWeight: 0
@@ -52,8 +53,8 @@ MonoBehaviour:
     - serializedVersion: 3
       time: 100
       value: 5
-      inSlope: 0
-      outSlope: 0
+      inSlope: -0.03
+      outSlope: -0.03
       tangentMode: 0
       weightedMode: 0
       inWeight: 0
@@ -67,17 +68,17 @@ MonoBehaviour:
     - serializedVersion: 3
       time: 0
       value: 2
-      inSlope: 0
-      outSlope: 0
+      inSlope: -0.015
+      outSlope: -0.015
       tangentMode: 0
       weightedMode: 0
       inWeight: 0
       outWeight: 0
     - serializedVersion: 3
       time: 100
-      value: 2
-      inSlope: 0
-      outSlope: 0
+      value: 0.5
+      inSlope: -0.015
+      outSlope: -0.015
       tangentMode: 0
       weightedMode: 0
       inWeight: 0

@@ -22,7 +22,8 @@ public class ComprehensiveExaminationController : MonoBehaviour
     public const string SceneName = "ComprehensiveExaminationScene";
     private const float EntryManaCost = 20f;
     private const float ModeChangeManaCost = 2f;
-    private const float ManaDrainPerSecond = 0.1f;
+    private const float StandardManaDrainPerSecond = 0.1f;
+    private const float MentalManaDrainPerSecond = 1f;
     private const float PainSampleInterval = 0.15f;
     private const int UiLayer = 5;
 
@@ -37,6 +38,11 @@ public class ComprehensiveExaminationController : MonoBehaviour
     [SerializeField]
     [Tooltip("Communicate.stageに対応する心拍・苦痛のf(MP)設定。未登録ステージは中立値を使う。")]
     private ExaminationStageVitalsData[] stageVitals = Array.Empty<ExaminationStageVitalsData>();
+
+    [SerializeField]
+    [Min(0.05f)]
+    [Tooltip("患部表示が半径0から最大半径まで拡大し、0へ戻るまでの秒数。")]
+    private float lesionSawtoothPeriodSeconds = 1f;
 
     private readonly Dictionary<ExaminationMagicMode, string[]> layersByMagic = new()
     {
@@ -587,7 +593,7 @@ public class ComprehensiveExaminationController : MonoBehaviour
             return;
         }
 
-        manaDrainAccumulator += Time.deltaTime * ManaDrainPerSecond;
+        manaDrainAccumulator += Time.deltaTime * GetManaDrainPerSecond();
         while (manaDrainAccumulator >= 0.1f)
         {
             if (!manaSource.TrySpendMana(0.1f))
@@ -644,12 +650,17 @@ public class ComprehensiveExaminationController : MonoBehaviour
             bool isRelevant =
                 lesion.RequiredMagic == currentMagic &&
                 lesion.RequiredLayer == currentLayer;
+            bool ignoresMagnifier =
+                isRelevant && currentMagic == ExaminationMagicMode.Mental;
+            bool isObserved =
+                ignoresMagnifier ||
+                (magnifierIsInExaminationArea &&
+                 Vector2.Distance(magnifierWorldPosition, lesion.Position) <= 0.62f + lesion.Radius);
 
             if (isRelevant &&
                 !lesion.Discovered &&
                 !manaExhausted &&
-                magnifierIsInExaminationArea &&
-                Vector2.Distance(magnifierWorldPosition, lesion.Position) <= 0.62f + lesion.Radius)
+                isObserved)
             {
                 lesion.Progress = Mathf.Clamp01(
                     lesion.Progress + Time.deltaTime / lesion.RequiredContactSeconds);
@@ -677,8 +688,23 @@ public class ComprehensiveExaminationController : MonoBehaviour
         bool isRelevant =
             lesion.RequiredMagic == currentMagic &&
             lesion.RequiredLayer == currentLayer;
-        float alpha = isRelevant ? lesion.Progress * lesion.MaxAlpha : 0f;
+        bool isMentalGlobalReveal =
+            isRelevant && currentMagic == ExaminationMagicMode.Mental;
+        float alpha = isMentalGlobalReveal
+            ? lesion.MaxAlpha
+            : isRelevant ? lesion.Progress * lesion.MaxAlpha : 0f;
         SetLineColor(lesion.Line, new Color(1f, 0.05f, 0.05f, alpha));
+
+        float safePeriod = Mathf.Max(0.05f, lesionSawtoothPeriodSeconds);
+        float radiusScale = Mathf.Repeat(Time.time / safePeriod, 1f);
+        lesion.Line.transform.localScale = new Vector3(radiusScale, radiusScale, 1f);
+    }
+
+    private float GetManaDrainPerSecond()
+    {
+        return currentMagic == ExaminationMagicMode.Mental
+            ? MentalManaDrainPerSecond
+            : StandardManaDrainPerSecond;
     }
 
     private void UpdateReadouts()
@@ -686,13 +712,24 @@ public class ComprehensiveExaminationController : MonoBehaviour
         float currentMp = manaSource != null ? manaSource.CurrentMP : 0f;
         if (mpText != null && manaSource != null)
         {
-            mpText.text = $"MP：{currentMp:0.0}\n維持消費：毎秒0.1";
+            mpText.text = $"MP：{currentMp:0.0}\n維持消費：毎秒{GetManaDrainPerSecond():0.0}";
         }
 
         ExaminationStageVitalsData vitals = FindStageVitals();
         float heartRate = vitals != null ? vitals.EvaluateHeartRate(currentMp) : 88f;
         float painLevel = vitals != null ? vitals.EvaluatePainLevel(currentMp) : 5f;
         float painVariation = vitals != null ? vitals.EvaluatePainVariation(currentMp) : 2f;
+        bool painIsAvailable =
+            currentMp > 0.0001f ||
+            vitals == null ||
+            vitals.mpZeroPolicy == ExaminationMpZeroPolicy.Stable;
+
+        if (!painIsAvailable)
+        {
+            heartRate = 0f;
+            painLevel = 0f;
+            painVariation = 0f;
+        }
 
         if (heartText != null)
         {
@@ -701,7 +738,14 @@ public class ComprehensiveExaminationController : MonoBehaviour
 
         if (painText != null)
         {
-            painText.text = $"苦痛：{painLevel:0.0} / 10　ばらつき：{painVariation:0.0}";
+            painText.text = painIsAvailable
+                ? $"苦痛：{painLevel:0.0} / 10　ばらつき：{painVariation:0.0}"
+                : "苦痛：N/A　ばらつき：0.0";
+        }
+
+        if (painGraph != null)
+        {
+            painGraph.gameObject.SetActive(painIsAvailable);
         }
 
         painWavePhase = Mathf.Repeat(painWavePhase + Time.deltaTime * 2.2f, Mathf.PI * 2f);
@@ -728,16 +772,23 @@ public class ComprehensiveExaminationController : MonoBehaviour
             }
         }
 
-        painSampleTimer += Time.deltaTime;
-        while (painSampleTimer >= PainSampleInterval)
+        if (painIsAvailable)
         {
-            painSampleTimer -= PainSampleInterval;
-            float painWave =
-                Mathf.Sin(painWavePhase) * 0.65f +
-                Mathf.Sin(painWavePhase * 0.37f) * 0.35f;
-            float painValue = painLevel + painWave * painVariation;
+            painSampleTimer += Time.deltaTime;
+            while (painSampleTimer >= PainSampleInterval)
+            {
+                painSampleTimer -= PainSampleInterval;
+                float painWave =
+                    Mathf.Sin(painWavePhase) * 0.65f +
+                    Mathf.Sin(painWavePhase * 0.37f) * 0.35f;
+                float painValue = painLevel + painWave * painVariation;
 
-            painGraph?.AddSample(painValue);
+                painGraph?.AddSample(painValue);
+            }
+        }
+        else
+        {
+            painSampleTimer = 0f;
         }
     }
 

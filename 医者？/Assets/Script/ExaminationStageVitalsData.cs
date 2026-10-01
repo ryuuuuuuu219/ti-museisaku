@@ -1,5 +1,11 @@
 using UnityEngine;
 
+public enum ExaminationMpZeroPolicy
+{
+    Stable,
+    Fatal
+}
+
 [CreateAssetMenu(
     fileName = "ExaminationStageVitals",
     menuName = "Medical Game/Examination Stage Vitals")]
@@ -7,6 +13,9 @@ public class ExaminationStageVitalsData : ScriptableObject
 {
     [Tooltip("Communicate.stageと対応するステージ番号。")]
     public int stage;
+
+    [Tooltip("MPが0になったときの患者状態。Stableはf(0)を維持し、Fatalは心拍0・苦痛度N/Aになる。")]
+    public ExaminationMpZeroPolicy mpZeroPolicy = ExaminationMpZeroPolicy.Stable;
 
     [Tooltip("横軸は現在MP、縦軸は心拍数(bpm)。MPは消費により右から左へ進む。")]
     public AnimationCurve heartRateByMp = AnimationCurve.Linear(0f, 88f, 100f, 88f);

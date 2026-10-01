@@ -162,6 +162,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ComprehensiveExaminationController
   stageVitals:
   - {fileID: 11400000, guid: 758bb89069c84ad486db2dd915f6400b, type: 2}
+  lesionSawtoothPeriodSeconds: 1
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
