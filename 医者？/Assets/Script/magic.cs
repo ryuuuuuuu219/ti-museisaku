@@ -17,6 +17,21 @@ public class MagicData
 
 public class magic : MonoBehaviour
 {
+    public const string ComprehensiveExaminationName = "総合検査";
+
+    private static readonly HashSet<string> IntegratedExaminationMagicNames = new()
+    {
+        "スキャン魔法",
+        "視覚強化魔法",
+        "超音波",
+        "CT",
+        "レントゲン",
+        "MRI（雷魔法＝磁場）",
+        "MRI魔力版",
+        "神経系走査",
+        "生体電気確認"
+    };
+
     public InputButton buttonScript;
     public TextMeshProUGUI MPlabel;
     public GameObject Parent_scrollView;
@@ -24,7 +39,10 @@ public class magic : MonoBehaviour
 
     public List<Button> magicButtons = new List<Button>();
 
-    float currentMP = 100f;
+    [SerializeField]
+    private float currentMP = 100f;
+
+    public float CurrentMP => currentMP;
 
     public MagicData[] magicList = new MagicData[]
     {
@@ -56,6 +74,8 @@ public class magic : MonoBehaviour
 
     private void Start()
     {
+        ConsolidateExaminationMagic();
+
         foreach (var magic in magicList)
         {
             GameObject newItem = Instantiate(ScrollPrefab, Parent_scrollView.transform);
@@ -67,6 +87,44 @@ public class magic : MonoBehaviour
             newItem.GetComponent<Button>().onClick.AddListener(() => OnMagicSelected(magic.magicName));
             magicButtons.Add(newItem.GetComponent<Button>());
         }
+
+        RefreshMPDisplay();
+        MPCheck();
+    }
+
+    private void ConsolidateExaminationMagic()
+    {
+        var consolidated = new List<MagicData>();
+        bool examinationAdded = false;
+
+        foreach (MagicData magicData in magicList)
+        {
+            if (magicData == null)
+            {
+                continue;
+            }
+
+            if (magicData.magicName == ComprehensiveExaminationName ||
+                IntegratedExaminationMagicNames.Contains(magicData.magicName))
+            {
+                if (!examinationAdded)
+                {
+                    consolidated.Add(new MagicData(ComprehensiveExaminationName, 20f));
+                    examinationAdded = true;
+                }
+
+                continue;
+            }
+
+            consolidated.Add(magicData);
+        }
+
+        if (!examinationAdded)
+        {
+            consolidated.Add(new MagicData(ComprehensiveExaminationName, 20f));
+        }
+
+        magicList = consolidated.ToArray();
     }
 
     private void MPCheck()
@@ -98,19 +156,33 @@ public class magic : MonoBehaviour
                 continue;
             }
 
-            if (currentMP < magic.manaCost)
-            {
-                return false;
-            }
-
-            currentMP -= magic.manaCost;
-            MPlabel.text = "MP: " + currentMP.ToString("F0");
-            MPCheck();
-            return true;
+            return TrySpendMana(magic.manaCost);
         }
 
         // 魔法名ではない通常の入力はMP消費の対象外。
         return true;
+    }
+
+    public bool TrySpendMana(float amount)
+    {
+        amount = Mathf.Max(0f, amount);
+        if (currentMP + 0.0001f < amount)
+        {
+            return false;
+        }
+
+        currentMP = Mathf.Max(0f, currentMP - amount);
+        RefreshMPDisplay();
+        MPCheck();
+        return true;
+    }
+
+    private void RefreshMPDisplay()
+    {
+        if (MPlabel != null)
+        {
+            MPlabel.text = "MP: " + currentMP.ToString("0.0");
+        }
     }
 
 }
