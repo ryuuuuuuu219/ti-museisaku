@@ -86,3 +86,28 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+  lesions:
+  - id: S01-V001
+    findingText: 左腕に浅い切創と発赤を確認
+    requiredMagic: 0
+    requiredLayer: 身体表面
+    position: {x: -1.36, y: 1.65}
+    radius: 0.34
+    requiredContactSeconds: 2.5
+    maxAlpha: 0.82
+  - id: S01-I001
+    findingText: 左腕皮下に白い針状異物を確認
+    requiredMagic: 1
+    requiredLayer: 表皮・皮下
+    position: {x: -1.34, y: 1.18}
+    radius: 0.29
+    requiredContactSeconds: 2.5
+    maxAlpha: 0.82
+  - id: S01-M001
+    findingText: 左腕に強い灼熱感を確認
+    requiredMagic: 2
+    requiredLayer: 主観症状
+    position: {x: -1.35, y: 1.4}
+    radius: 0.43
+    requiredContactSeconds: 2.5
+    maxAlpha: 0.82

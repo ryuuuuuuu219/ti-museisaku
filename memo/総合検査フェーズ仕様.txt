@@ -405,6 +405,9 @@ Stage01用の仮所見
 ----------
 症例ごとの所見には、少なくとも次の情報を持たせる。
 
+現行実装では、`Communicate.stage`に対応する`ExaminationStageVitalsData`ごとに`lesions`配列を持ち、患部を列挙して管理する。
+患部をコードへ直接記述せず、ステージ別アセットのInspectorから追加・編集する。
+
 - 所見ID
 - 表示名
 - 説明文

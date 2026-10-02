@@ -36,7 +36,7 @@ public class ComprehensiveExaminationController : MonoBehaviour
     private static readonly float[] HeartbeatWaveform = { 10f, -3f, 1f, 0f, 0f, 0f, 0f, 0f };
 
     [SerializeField]
-    [Tooltip("Communicate.stageに対応する心拍・苦痛のf(MP)設定。未登録ステージは中立値を使う。")]
+    [Tooltip("Communicate.stageに対応する生体値と患部の設定。未登録ステージは中立値を使い、患部は生成しない。")]
     private ExaminationStageVitalsData[] stageVitals = Array.Empty<ExaminationStageVitalsData>();
 
     [SerializeField]
@@ -159,7 +159,7 @@ public class ComprehensiveExaminationController : MonoBehaviour
         uiFont = FindJapaneseFont();
         BuildCameraAndWorld();
         BuildInterface();
-        CreatePrototypeLesions();
+        CreateStageLesions();
         RefreshMagicAndLayerDisplay();
         RefreshFindings();
     }
@@ -529,57 +529,50 @@ public class ComprehensiveExaminationController : MonoBehaviour
         button.onClick.AddListener(() => SelectMagic(mode));
     }
 
-    private void CreatePrototypeLesions()
+    private void CreateStageLesions()
     {
-        AddLesion(
-            "S01-V001",
-            "左腕に浅い切創と発赤を確認",
-            ExaminationMagicMode.Visual,
-            "身体表面",
-            new Vector2(-1.36f, 1.65f),
-            0.34f);
+        ExaminationStageVitalsData stageData = FindStageVitals();
+        if (stageData == null || stageData.lesions == null)
+        {
+            return;
+        }
 
-        AddLesion(
-            "S01-I001",
-            "左腕皮下に白い針状異物を確認",
-            ExaminationMagicMode.Internal,
-            "表皮・皮下",
-            new Vector2(-1.34f, 1.18f),
-            0.29f);
+        foreach (ExaminationLesionDefinition definition in stageData.lesions)
+        {
+            if (definition == null || string.IsNullOrWhiteSpace(definition.id))
+            {
+                continue;
+            }
 
-        AddLesion(
-            "S01-M001",
-            "左腕に強い灼熱感を確認",
-            ExaminationMagicMode.Mental,
-            "主観症状",
-            new Vector2(-1.35f, 1.40f),
-            0.43f);
+            AddLesion(definition);
+        }
     }
 
-    private void AddLesion(
-        string id,
-        string findingText,
-        ExaminationMagicMode requiredMagic,
-        string requiredLayer,
-        Vector2 position,
-        float radius)
+    private void AddLesion(ExaminationLesionDefinition definition)
     {
+        string id = definition.id;
         float savedProgress = SavedProgress.TryGetValue(id, out float progress) ? progress : 0f;
         bool discovered = SavedFindings.Contains(id);
 
         LesionState lesion = new()
         {
             Id = id,
-            FindingText = findingText,
-            RequiredMagic = requiredMagic,
-            RequiredLayer = requiredLayer,
-            Position = position,
-            Radius = radius,
-            RequiredContactSeconds = 2.5f,
-            MaxAlpha = 0.82f,
+            FindingText = definition.findingText,
+            RequiredMagic = definition.requiredMagic,
+            RequiredLayer = definition.requiredLayer,
+            Position = definition.position,
+            Radius = Mathf.Max(0.01f, definition.radius),
+            RequiredContactSeconds = Mathf.Max(0.01f, definition.requiredContactSeconds),
+            MaxAlpha = Mathf.Clamp01(definition.maxAlpha),
             Progress = discovered ? 1f : savedProgress,
             Discovered = discovered,
-            Line = CreatePolygonLine(id, position, radius, 32, 0.07f, 12)
+            Line = CreatePolygonLine(
+                id,
+                definition.position,
+                Mathf.Max(0.01f, definition.radius),
+                32,
+                0.07f,
+                12)
         };
 
         lesions.Add(lesion);
