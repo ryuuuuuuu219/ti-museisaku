@@ -1,3 +1,138 @@
+:root {
+    color: #172033;
+    font-family: "Yu Gothic UI", "Meiryo", sans-serif;
+    background: #eef2f7;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    min-width: 100vw;
+    min-height: 100vh;
+    margin: 0;
+    overflow: hidden;
+}
+
+.toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    height: 64px;
+    padding: 0 18px;
+    border-bottom: 1px solid #cbd5e1;
+    background: #ffffff;
+}
+
+.toolbar h1 {
+    margin: 0 auto 0 0;
+    font-size: 20px;
+}
+
 button {
-    width: 100px;
+    min-width: 100px;
+    padding: 8px 12px;
+    border: 1px solid #94a3b8;
+    border-radius: 6px;
+    background: #ffffff;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #f1f5f9;
+}
+
+#statusText {
+    min-width: 150px;
+    color: #64748b;
+    font-size: 13px;
+}
+
+#viewport {
+    width: 100vw;
+    height: calc(100vh - 64px);
+    overflow: auto;
+    background-color: #f8fafc;
+    background-image:
+        linear-gradient(#e2e8f0 1px, transparent 1px),
+        linear-gradient(90deg, #e2e8f0 1px, transparent 1px);
+    background-size: 20px 20px;
+}
+
+#nodeArea {
+    position: relative;
+    min-width: 100%;
+    min-height: 100%;
+}
+
+#connectionLayer {
+    position: absolute;
+    inset: 0;
+    overflow: visible;
+    pointer-events: none;
+}
+
+.prerequisite-connection {
+    fill: none;
+    stroke: #64748b;
+    stroke-width: 2;
+}
+
+.conversation-node {
+    position: absolute;
+    width: 180px;
+    height: 220px;
+    padding: 12px;
+    overflow: auto;
+    border: 2px solid #3b82f6;
+    border-radius: 8px;
+    background: #ffffff;
+    box-shadow: 0 4px 12px rgb(15 23 42 / 12%);
+    scroll-margin: 24px;
+}
+
+.conversation-node:target {
+    border-color: #f97316;
+    box-shadow: 0 0 0 4px rgb(249 115 22 / 20%);
+}
+
+.conversation-node h2 {
+    margin: 0 0 12px;
+    color: #1d4ed8;
+    font-size: 15px;
+}
+
+.conversation-node p {
+    margin: 8px 0 0;
+    color: #334155;
+    font-size: 12px;
+    line-height: 1.5;
+    white-space: pre-wrap;
+}
+
+.interlocking-links {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    display: flex;
+    max-width: 105px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 4px;
+}
+
+.interlocking-link {
+    padding: 2px 5px;
+    border: 1px solid #dc2626;
+    border-radius: 999px;
+    color: #b91c1c;
+    background: #fef2f2;
+    font-size: 10px;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.interlocking-link:hover {
+    background: #fee2e2;
 }

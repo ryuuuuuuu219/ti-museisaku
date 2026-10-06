@@ -3,15 +3,28 @@
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Stage01 Editor</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-    <h1>Stage01 Editor</h1>
+    <header class="toolbar">
+        <h1>Stage01 Editor</h1>
+        <button id="openButton" type="button">input.txtを開く</button>
+        <input id="fileInput" type="file" accept=".txt,text/plain" hidden>
+        <button id="saveButton" type="button">保存</button>
+        <span id="statusText" role="status">input.txtを読み込んでいます…</span>
+    </header>
 
-    <button id="saveButton">保存</button>
+    <main id="viewport">
+        <div id="nodeArea" aria-label="会話ノード配置領域">
+            <svg id="connectionLayer" aria-hidden="true"></svg>
+        </div>
+    </main>
 
+    <script src="input-data.js"></script>
     <script src="editor.js"></script>
 </body>
 
