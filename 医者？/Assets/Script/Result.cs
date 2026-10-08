@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 public class Result : MonoBehaviour
 {
@@ -11,7 +12,7 @@ public class Result : MonoBehaviour
 
     public ResultType resultType;
     public Button Button;
-    public Text resultText;
+    public TextMeshProUGUI resultText;
 
     public void result(ResultType type)
     {
