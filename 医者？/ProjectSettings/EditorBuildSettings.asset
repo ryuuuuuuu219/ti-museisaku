@@ -6,10 +6,13 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/SampleScene.unity
+    path: Assets/Scenes/Main.unity
     guid: 99c9720ab356a0642a771bea13969a05
   - enabled: 1
-    path: Assets/Scenes/ComprehensiveExaminationScene.unity
-    guid: 1dc970b9bd3a44b78d1f0243c03f7df2
+    path: Assets/Scenes/Karte.unity
+    guid: 2d8d05463ab649442b2e642104c67e68
+  - enabled: 1
+    path: Assets/Scenes/Result.unity
+    guid: 8f8ccbbd3a3ac6d4dae0ba50ed7fe2c9
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
