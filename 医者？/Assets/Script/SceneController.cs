@@ -27,6 +27,7 @@ public class SceneController : MonoBehaviour
 
     public static void LoadResultScene()
     {
+        ConversationSave.SaveCurrent();
         SceneManager.LoadScene(resultScene);
     }
 
@@ -37,6 +38,7 @@ public class SceneController : MonoBehaviour
 
     public static void LoadKarteScene()
     {
+        ConversationSave.SaveCurrent();
         SceneManager.LoadScene(karteScene);
     }
 }

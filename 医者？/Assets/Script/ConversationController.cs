@@ -24,7 +24,12 @@ public class ConversationController : MonoBehaviour
 
     private void Start()
     {
-        InitializeOutput();
+        if (!InitializeOutput() || ConversationData == null)
+            return;
+
+        // Replyを呼ばずに描画する。履歴の追加やキューの消費は行わない。
+        foreach (int id in ConversationData.replyedID)
+            SetText(ConversationData.GetConversationByID(id, currentstageID));
     }
 
     private bool InitializeOutput()

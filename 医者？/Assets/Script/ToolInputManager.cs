@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
@@ -7,7 +7,7 @@ public class ToolInputManager : MonoBehaviour
 {
     public ConversationController ConversationController;
 
-    [Tooltip("道具のButtonが付いたGameObject")]
+    [Tooltip("道具のUIオブジェクト。Buttonがなければ実行時に自動追加します。")]
     public List<GameObject> tool = new List<GameObject>();
     [Tooltip("toolと同じ番号のボタンで送信する文字列")]
     public List<string> toolname = new List<string>();
@@ -25,12 +25,21 @@ public class ToolInputManager : MonoBehaviour
 
         for (int i = 0; i < tool.Count && i < toolname.Count; i++)
         {
-            var button = tool[i] != null ? tool[i].GetComponent<Button>() : null;
-            if (button == null)
+            var obj = tool[i];
+            if (obj == null)
             {
-                Debug.LogWarning("tool[" + i + "]にButtonが付いたGameObjectを設定してください。", this);
+                Debug.LogWarning("tool[" + i + "]にGameObjectを設定してください。", this);
                 continue;
             }
+
+            var button = obj.GetComponent<Button>();
+            if (button == null)
+                button = obj.AddComponent<Button>();
+
+            if (button.targetGraphic == null)
+                button.targetGraphic = obj.GetComponent<Graphic>();
+            if (button.targetGraphic != null)
+                button.targetGraphic.raycastTarget = true;
 
             // ボタンごとの番号を保持する。クリックされるまで送信しない。
             int id = i;
@@ -58,7 +67,7 @@ public class ToolInputManager : MonoBehaviour
             return;
         }
 
-        ConversationController.InputField.text = toolname[id];
+        ConversationController.InputField.text = toolname[id]+"を使用する";
         ConversationController.Onclick_send();
     }
 

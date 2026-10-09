@@ -35,11 +35,13 @@ public class Result : MonoBehaviour
 
     public void toMain_bad()
     {
+        ConversationSave.Clear();
         SceneController.LoadMainScene();
     }
 
     public void toMain_good()
     {
+        ConversationSave.Clear();
         SceneController.stageID++;
         SceneController.LoadMainScene();
     }

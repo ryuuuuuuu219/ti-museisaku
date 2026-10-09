@@ -43,7 +43,13 @@ public class Conversation
 public partial class ConversationData : MonoBehaviour
 {
     public List<int> replyIDqueue = new List<int>();
-    public HashSet<int> replyedID = new HashSet<int>();
+    // 回答済み判定と、返答を表示する順序を兼ねる。
+    public List<int> replyedID = new List<int>();
+
+    private void Awake()
+    {
+        ConversationSave.Restore(this, SceneController.stageID);
+    }
 
     //ステージを増やしたときは、ここに追加する
     public Conversation[] GetConversationsByStage(int stage)
